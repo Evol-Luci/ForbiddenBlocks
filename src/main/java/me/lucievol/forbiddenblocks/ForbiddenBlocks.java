@@ -1,18 +1,23 @@
 package me.lucievol.forbiddenblocks;
-
+import com.terraformersmc.modmenu.api.ConfigScreenFactory;
+import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.api.ModInitializer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import me.lucievol.forbiddenblocks.config.ForbiddenBlocksConfig;
 
 public class ForbiddenBlocks implements ModInitializer {
-	public static final String MOD_ID = "forbiddenblocks";
-
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
 	public void onInitialize() {
 
 
+	}
+
+
+}
+
+class ModMenuIntegration implements ModMenuApi {
+	@Override
+	public ConfigScreenFactory<?> getModConfigScreenFactory() {
+		return ForbiddenBlocksConfig::createConfigScreen;
 	}
 }
