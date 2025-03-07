@@ -9,9 +9,7 @@
 		"homepage": "https://www.evoldigitalproductions.com",
 		"sources": "https://github.com/Evol-Luci/Minecraft_Client_Mods/No_PlaceBlock_Client"
   },
-	"license": "MIT",
-	"icon": "assets/forbiddenblocks/icon.png",
-	"environment": "*",
+	"icon": "assets/icon.png",
 	"entrypoints": {
 		"main": [
 			"me.lucievol.forbiddenblocks.ForbiddenBlocks"
