@@ -1,0 +1,8 @@
+{
+  "category.forbiddenblocks.keys": "Forbidden Blocks",
+  "key.forbiddenblocks.forbid": "Toggle Block Restriction (O)",
+  "key.forbiddenblocks.toggle_messages": "Toggle Feedback Messages (M)",
+  "text.autoconfig.forbiddenblocks.title": "Forbidden Blocks Settings",
+  "text.autoconfig.forbiddenblocks.option.showMessages": "Show Feedback Messages",
+  "text.autoconfig.forbiddenblocks.option.showMessages.tooltip": "Show chat messages when toggling blocks or changing settings"
+}
