@@ -1,53 +1,115 @@
-# ForbiddenBlocks
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+![ForbiddenBlocks](https://github.com/user-attachments/assets/3154dae8-871a-4eb8-8758-003fda8ada68)
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Overview
+### **_🛑 ForbiddenBlocks_**
 
-ForbiddenBlocks is a client-side mod for Minecraft that allows players to set specific blocks as forbidden, preventing their placement in the game. This mod is particularly useful for players who want to avoid losing items with specific names or lore.
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Key Features
+### **🚀 Overview**
 
-- **Block Placement Prevention**: Users can define a list of forbidden blocks that cannot be placed in the game.
-- **User Feedback**: Configurable messages provide feedback when players attempt to place forbidden blocks.
-- **ModMenu Integration**: Easy access to configure settings through the settings interface.
-- **World-Specific Configurations**: Each Minecraft world or server can have its own configuration file, allowing for tailored settings.
+-----------------------
 
-## Installation
+ForbiddenBlocks is a client-side Minecraft mod that prevents players from placing specific blocks and named items, ensuring you never accidentally lose custom names or lore associations!
 
-1. **Download the mod** from the [official repository](https://github.com/Evol-Luci/Minecraft_Client_Mods/No_PlaceBlock_Client).
-2. **Place the mod file** in the `mods` folder of your Minecraft installation.
-3. **Launch Minecraft** with the Fabric loader.
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Configuration
+_🔒 Protect your rare artifacts_
 
-### Global Settings
+-----------------------------------------
 
-The global settings are managed through the [ForbiddenBlocksConfig]me/lucievol/forbiddenblocks/config/ForbiddenBlocksConfig.java class, which allows you to toggle the visibility of feedback messages.
+special mementos and custom-named blocks protected from accidental placement! No more losing that legendary sword or story-rich items to a mis click! 🎭🏆
 
-### World-Specific Settings
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Each world or server has its own configuration file stored in JSON format:
-- **Single Player Worlds**: `config/forbiddenblocks/worlds/singleplayer_[worldname].json`
-- **Multiplayer Servers**: `config/forbiddenblocks/worlds/multiplayer_[serveraddress].json`
+_✨ Key Features_
 
-You can modify the forbidden blocks list directly in these files or through the in-game configuration UI.
+--------------------------
 
-## Usage
+✅ Block & Named Item Placement Prevention – Define a list of blocks AND named items that CANNOT be placed! ❌🏗️🔖
+💬 User Feedback – Get configurable messages when you try to place forbidden blocks or protected artifacts! 🔔
+🛠️ Minecraft Controls Menu Integration – Adjust settings easily through the traditional Minecraft Menu! 🎛️
+🌎 World-Specific Configurations – Each Minecraft world or server can have its own settings! 🌐
 
-- **Toggle Forbidden Blocks**: Use the designated key (default: `O`) to toggle the restriction on block placement.
-- **Toggle Feedback Messages**: Use the designated key (default: `M`) to toggle visibility of feedback messages.
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Dependencies
+### **📥 Installation**
 
-- **Fabric Loader**: Version >= 0.16.10
-- **Minecraft**: Version ~1.21.4
-- **Java**: Version >= 21
-- **Fabric API**: Required for mod functionality.
-- **Cloth Config**: For configuration management.
+-------------------------
 
-## License
+1️⃣ Download the mod from the official repository. ⬇️
+2️⃣ Move the .jar file into your Minecraft mods folder. 📂
+3️⃣ Launch Minecraft using the Fabric Loader. 🚀
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Authors
+### **⚙️ Configuration**
 
-- **LuciEvol** - [Website](https://www.evoldigitalproductions.com)
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ _🌍 Global Settings_----------
+
+                  📜 Managed through ForbiddenBlocksConfig – toggle visibility of feedback messages in-game!
+
+ _🗂️ World-Specific Settings_----------
+
+                    Each world or server gets its own JSON file for custom forbidden block & named item lists!
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+_📌 Single Player: config/forbiddenblocks/worlds/singleplayer_[worldname].json_
+_📌 Multiplayer: config/forbiddenblocks/worlds/multiplayer_[serveraddress].json_
+
+**🔧 Modify settings directly in these files or via the in-game config UI!**
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### **🎮 Usage**
+
+-----------------------
+                   🛑 Toggle Forbidden Blocks & Named Items_ – Press O (default) to enable/disable placement restrictions.
+                   💬 Toggle Feedback Messages_ – Press M (default) to show/hide feedback messages.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### **_🏆 Prevent placing named artifacts like:_**
+
+--------------------------------------------------------
+
+_✨ Legendary Swords ⚔️_
+_📜 Custom-Lore Books 📖_
+_🏺 Decorative, One-of-a-Kind Items 🎨_
+_🔑 Keys & Quest Items 🗝️_
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### **📦 Dependencies**
+
+------------------------------
+🔹 _Fabric Loader_ – >= 0.16.10
+🔹 _Minecraft_ – ~1.21.4
+🔹 _Java_ – >= 21 ☕
+🔹 _Fabric API_ – Required for core functionality.
+🔹 _Cloth Config_ – Handles configuration management.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### **📜 License**
+
+----------------------
+
+📝 This project is licensed under the MIT License. See the [LICENSE](https://github.com/Evol-Luci/ForbiddenBlocks/releases/LICENSE) file for details.
+
+**👤 Author**
+_👩‍💻 LuciEvol – [Website](https://github.com/Evol-Luci/ForbiddenBlocks/releases/new#)_
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+### **_🎉 Enjoy the mod and keep your artifacts safe! 🏗️✨🏆_**
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
