@@ -254,7 +254,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             }
 
             if (hand == Hand.MAIN_HAND) {
-                ItemStack stack = clientPlayer.getMainHandStack();
+                ItemStack stack = clientPlayer.getStackInHand(hand);
                 String itemId = getItemIdentifier(stack);
                 
                 if (itemId.isEmpty()) {
