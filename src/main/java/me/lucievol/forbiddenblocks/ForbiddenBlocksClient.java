@@ -253,30 +253,28 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 return ActionResult.PASS;
             }
 
-            if (hand == Hand.MAIN_HAND) {
-                ItemStack stack = clientPlayer.getMainHandStack();
-                String itemId = getItemIdentifier(stack);
-                
-                if (itemId.isEmpty()) {
-                    return ActionResult.PASS;
+            ItemStack stack = clientPlayer.getStackInHand(hand);
+            String itemId = getItemIdentifier(stack);
+
+            if (itemId.isEmpty()) {
+                return ActionResult.PASS;
+            }
+
+            String itemName = stack.getName().getString();
+            String lore = ""; // Skip lore for now due to NBT access issues
+
+            LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}", itemId, itemName);
+            WorldConfig worldConfig = WorldConfig.getCurrentWorld();
+            WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, lore);
+            boolean isForbidden = worldConfig.isItemForbidden(identifier);
+            LOGGER.debug("Item forbidden status: {}", isForbidden);
+
+            if (isForbidden) {
+                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
                 }
-
-                String itemName = stack.getName().getString();
-                String lore = ""; // Skip lore for now due to NBT access issues
-
-                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}", itemId, itemName);
-                WorldConfig worldConfig = WorldConfig.getCurrentWorld();
-                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, lore);
-                boolean isForbidden = worldConfig.isItemForbidden(identifier);
-                LOGGER.debug("Item forbidden status: {}", isForbidden);
-
-                if (isForbidden) {
-                    if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-                        clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
-                    }
-                    LOGGER.info("Blocked placement of forbidden item: {} ({})", itemName, itemId);
-                    return ActionResult.FAIL;
-                }
+                LOGGER.info("Blocked placement of forbidden item: {} ({})", itemName, itemId);
+                return ActionResult.FAIL;
             }
             return ActionResult.PASS;
         } catch (Exception e) {
