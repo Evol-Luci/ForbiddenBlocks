@@ -16,6 +16,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import org.lwjgl.glfw.GLFW;
@@ -262,11 +264,25 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 }
 
                 String itemName = stack.getName().getString();
-                String lore = ""; // Skip lore for now due to NBT access issues
+                String loreString = "";
+                if (stack.hasNbt() && stack.getNbt().contains("display", 10)) {
+                    NbtCompound displayNbt = stack.getNbt().getCompound("display");
+                    if (displayNbt.contains("Lore", 9)) {
+                        NbtList loreList = displayNbt.getList("Lore", 8);
+                        StringBuilder loreBuilder = new StringBuilder();
+                        for (int i = 0; i < loreList.size(); i++) {
+                            loreBuilder.append(loreList.getString(i));
+                            if (i < loreList.size() - 1) {
+                                loreBuilder.append("\n");
+                            }
+                        }
+                        loreString = loreBuilder.toString();
+                    }
+                }
 
-                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}", itemId, itemName);
+                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}, Lore: {}", itemId, itemName, loreString);
                 WorldConfig worldConfig = WorldConfig.getCurrentWorld();
-                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, lore);
+                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, loreString);
                 boolean isForbidden = worldConfig.isItemForbidden(identifier);
                 LOGGER.debug("Item forbidden status: {}", isForbidden);
 
@@ -274,7 +290,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                         clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
                     }
-                    LOGGER.info("Blocked placement of forbidden item: {} ({})", itemName, itemId);
+                    LOGGER.info("Blocked placement of forbidden item: {} ({}) - Lore: {}", itemName, itemId, loreString);
                     return ActionResult.FAIL;
                 }
             }
@@ -300,15 +316,28 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         ItemStack stack = player.getMainHandStack();
         String registryId = getItemIdentifier(stack);
         String name = stack.getName().getString();
-        // Skip lore check for now since NBT access methods are causing issues
-        String lore = "";
+        String loreString = "";
+        if (stack.hasNbt() && stack.getNbt().contains("display", 10)) {
+            NbtCompound displayNbt = stack.getNbt().getCompound("display");
+            if (displayNbt.contains("Lore", 9)) {
+                NbtList loreList = displayNbt.getList("Lore", 8);
+                StringBuilder loreBuilder = new StringBuilder();
+                for (int i = 0; i < loreList.size(); i++) {
+                    loreBuilder.append(loreList.getString(i));
+                    if (i < loreList.size() - 1) {
+                        loreBuilder.append("\n");
+                    }
+                }
+                loreString = loreBuilder.toString();
+            }
+        }
 
         if (registryId.isEmpty()) {
             return;
         }
 
         WorldConfig config = WorldConfig.getCurrentWorld();
-        WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(registryId, name, lore);
+        WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(registryId, name, loreString);
         config.toggleItem(identifier);
         
         // Add user feedback
