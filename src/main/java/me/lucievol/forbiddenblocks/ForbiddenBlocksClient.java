@@ -12,6 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.item.tooltip.LoreComponent;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.minecraft.entity.player.PlayerEntity;
@@ -268,9 +269,10 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
 
                 String itemName = stack.getName().getString();
                 String loreString = "";
-                if (stack.contains(DataComponentTypes.LORE)) {
-                    List<Text> loreLines = stack.get(DataComponentTypes.LORE);
-                    if (loreLines != null) {
+                LoreComponent loreComponent = stack.get(DataComponentTypes.LORE);
+                if (loreComponent != null) {
+                    List<Text> loreLines = loreComponent.lines();
+                    if (loreLines != null && !loreLines.isEmpty()) { // Added !loreLines.isEmpty() for robustness
                         loreString = loreLines.stream()
                                               .map(Text::getString)
                                               .collect(Collectors.joining("\n"));
@@ -313,10 +315,11 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         ItemStack stack = player.getMainHandStack();
         String registryId = getItemIdentifier(stack);
         String name = stack.getName().getString();
-        String lore = "";
-        if (stack.contains(DataComponentTypes.LORE)) {
-            List<Text> loreLines = stack.get(DataComponentTypes.LORE);
-            if (loreLines != null) {
+        String lore = ""; // Variable name consistent with existing code in this method
+        LoreComponent loreComponent = stack.get(DataComponentTypes.LORE);
+        if (loreComponent != null) {
+            List<Text> loreLines = loreComponent.lines();
+            if (loreLines != null && !loreLines.isEmpty()) { // Added !loreLines.isEmpty() for robustness
                 lore = loreLines.stream()
                                 .map(Text::getString)
                                 .collect(Collectors.joining("\n"));
