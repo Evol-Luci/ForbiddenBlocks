@@ -12,7 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.tooltip.LoreComponent;
+import net.minecraft.component.type.LoreComponent;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.minecraft.entity.player.PlayerEntity;
