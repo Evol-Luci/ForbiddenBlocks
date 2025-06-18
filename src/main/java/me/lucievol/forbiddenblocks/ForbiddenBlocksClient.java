@@ -259,43 +259,55 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 return ActionResult.PASS;
             }
 
+            ItemStack stackInHand;
             if (hand == Hand.MAIN_HAND) {
-                ItemStack stack = clientPlayer.getMainHandStack();
-                String itemId = getItemIdentifier(stack);
-                
-                if (itemId.isEmpty()) {
-                    return ActionResult.PASS;
-                }
+                stackInHand = clientPlayer.getMainHandStack();
+            } else if (hand == Hand.OFF_HAND) {
+                stackInHand = clientPlayer.getOffHandStack();
+            } else {
+                // Should not happen with UseBlockCallback, but good practice to handle
+                return ActionResult.PASS;
+            }
 
-                String itemName = stack.getName().getString();
-                String loreString = "";
-                LoreComponent loreComponent = stack.get(DataComponentTypes.LORE);
-                if (loreComponent != null) {
-                    List<Text> loreLines = loreComponent.lines();
-                    if (loreLines != null && !loreLines.isEmpty()) { // Added !loreLines.isEmpty() for robustness
-                        loreString = loreLines.stream()
-                                              .map(Text::getString)
-                                              .collect(Collectors.joining("\n"));
-                    }
-                }
+            if (stackInHand == null || stackInHand.isEmpty()) { // Check if the selected stack is empty
+                return ActionResult.PASS;
+            }
 
-                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}, Lore: {}", itemId, itemName, loreString);
-                WorldConfig worldConfig = WorldConfig.getCurrentWorld();
-                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, loreString);
-                boolean isForbidden = worldConfig.isItemForbidden(identifier);
-                LOGGER.debug("Item forbidden status: {}", isForbidden);
+            String itemId = getItemIdentifier(stackInHand);
 
-                if (isForbidden) {
-                    if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-                        clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
-                    }
-                    LOGGER.info("Blocked placement of forbidden item: {} ({}) - Lore: {}", itemName, itemId, loreString);
-                    return ActionResult.FAIL;
+            if (itemId.isEmpty()) {
+                return ActionResult.PASS;
+            }
+
+            String itemName = stackInHand.getName().getString();
+            String loreString = "";
+            LoreComponent loreComponent = stackInHand.get(DataComponentTypes.LORE);
+            if (loreComponent != null) {
+                List<Text> loreLines = loreComponent.lines();
+                if (loreLines != null && !loreLines.isEmpty()) {
+                    loreString = loreLines.stream()
+                                          .map(Text::getString)
+                                          .collect(Collectors.joining("\n"));
                 }
             }
+
+            LOGGER.debug("Checking if item is forbidden - Hand: {}, ID: {}, Name: {}, Lore: {}", hand.toString(), itemId, itemName, loreString);
+            WorldConfig worldConfig = WorldConfig.getCurrentWorld();
+            WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, loreString);
+            boolean isForbidden = worldConfig.isItemForbidden(identifier);
+            LOGGER.debug("Item forbidden status: {}", isForbidden);
+
+            if (isForbidden) {
+                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
+                }
+                LOGGER.info("Blocked placement of forbidden item: {} ({}) - Hand: {}, Lore: {}", itemName, itemId, hand.toString(), loreString);
+                return ActionResult.FAIL;
+            }
+
             return ActionResult.PASS;
         } catch (Exception e) {
-            LOGGER.error("Error checking block placement", e);
+            LOGGER.error("Error checking block placement for hand " + hand.toString(), e);
             return ActionResult.PASS; // On error, allow placement to prevent disruption
         }
     }
