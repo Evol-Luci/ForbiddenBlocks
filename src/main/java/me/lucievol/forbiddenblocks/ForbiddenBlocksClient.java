@@ -11,17 +11,11 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LoreComponent;
-import java.util.List;
-import java.util.stream.Collectors;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
-// No longer needed: import net.minecraft.nbt.NbtCompound;
-// No longer needed: import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import org.lwjgl.glfw.GLFW;
@@ -268,20 +262,11 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 }
 
                 String itemName = stack.getName().getString();
-                String loreString = "";
-                LoreComponent loreComponent = stack.get(DataComponentTypes.LORE);
-                if (loreComponent != null) {
-                    List<Text> loreLines = loreComponent.lines();
-                    if (loreLines != null && !loreLines.isEmpty()) { // Added !loreLines.isEmpty() for robustness
-                        loreString = loreLines.stream()
-                                              .map(Text::getString)
-                                              .collect(Collectors.joining("\n"));
-                    }
-                }
+                String lore = ""; // Skip lore for now due to NBT access issues
 
-                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}, Lore: {}", itemId, itemName, loreString);
+                LOGGER.debug("Checking if item is forbidden - ID: {}, Name: {}", itemId, itemName);
                 WorldConfig worldConfig = WorldConfig.getCurrentWorld();
-                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, loreString);
+                WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, lore);
                 boolean isForbidden = worldConfig.isItemForbidden(identifier);
                 LOGGER.debug("Item forbidden status: {}", isForbidden);
 
@@ -289,7 +274,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                         clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
                     }
-                    LOGGER.info("Blocked placement of forbidden item: {} ({}) - Lore: {}", itemName, itemId, loreString);
+                    LOGGER.info("Blocked placement of forbidden item: {} ({})", itemName, itemId);
                     return ActionResult.FAIL;
                 }
             }
@@ -315,16 +300,8 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         ItemStack stack = player.getMainHandStack();
         String registryId = getItemIdentifier(stack);
         String name = stack.getName().getString();
-        String lore = ""; // Variable name consistent with existing code in this method
-        LoreComponent loreComponent = stack.get(DataComponentTypes.LORE);
-        if (loreComponent != null) {
-            List<Text> loreLines = loreComponent.lines();
-            if (loreLines != null && !loreLines.isEmpty()) { // Added !loreLines.isEmpty() for robustness
-                lore = loreLines.stream()
-                                .map(Text::getString)
-                                .collect(Collectors.joining("\n"));
-            }
-        }
+        // Skip lore check for now since NBT access methods are causing issues
+        String lore = "";
 
         if (registryId.isEmpty()) {
             return;
