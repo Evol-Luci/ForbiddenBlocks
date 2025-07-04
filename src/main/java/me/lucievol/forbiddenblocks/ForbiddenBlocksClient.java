@@ -18,8 +18,8 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
-import net.minecraft.item.component.DataComponentMap; // Changed package
-import net.minecraft.item.component.DataComponentType; // Changed package
+import net.minecraft.component.ComponentMap; // Corrected class name
+import net.minecraft.component.ComponentType; // Corrected class name
 // import net.minecraft.component.DataComponentTypes; // Not directly used
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -253,24 +253,23 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             String registryId = id.toString();
             String displayName = stack.getName().getString();
 
-            DataComponentMap currentComponents = stack.getComponents();
-            Map<String, JsonElement> componentMap = new TreeMap<>(); // TreeMap for sorted keys
+            ComponentMap currentComponents = stack.getComponents(); // Use ComponentMap
+            Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
 
-            // Iterate directly over the components present in the ItemStack's DataComponentMap
-            for (DataComponentMap.Entry<?> entry : currentComponents) {
-                DataComponentType<?> componentType = entry.type();
-                // value() directly gives the component's value, not an Optional
+            // Iterate directly over the components present in the ItemStack's ComponentMap
+            // ComponentMap itself is iterable with ComponentMap.Entry
+            for (ComponentMap.Entry<?> entry : currentComponents) {
+                ComponentType<?> componentType = entry.type(); // Use ComponentType
                 Object value = entry.value();
 
-                Identifier componentId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
-                // Ensure componentId is not null (should always be true for valid components)
-                // and value is not null (some components might theoretically have null as a valid value,
-                // though GSON.toJsonTree(null) becomes JsonNull.INSTANCE, which is fine).
-                if (componentId != null) {
-                    componentMap.put(componentId.toString(), GSON.toJsonTree(value));
+                // Assuming Registries.DATA_COMPONENT_TYPE is still the correct registry for ComponentType instances
+                Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
+
+                if (componentTypeId != null) {
+                    componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(value));
                 }
             }
-            String componentsJson = GSON.toJson(componentMap);
+            String componentsJson = GSON.toJson(componentJsonMap);
 
             LOGGER.debug("Item info - Registry ID: {}, Display Name: {}, Components: {}", registryId, displayName, componentsJson);
             return new WorldConfig.ItemIdentifier(registryId, displayName, componentsJson);
