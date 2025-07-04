@@ -18,8 +18,8 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
-import net.minecraft.component.DataComponentMap;
-import net.minecraft.component.DataComponentType;
+import net.minecraft.item.component.DataComponentMap; // Changed package
+import net.minecraft.item.component.DataComponentType; // Changed package
 // import net.minecraft.component.DataComponentTypes; // Not directly used
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
