@@ -18,10 +18,23 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
+import net.minecraft.component.DataComponentMap;
+import net.minecraft.component.DataComponentType;
+// import net.minecraft.component.DataComponentTypes; // Not directly used
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+
+import java.util.Map;
+import java.util.TreeMap;
+// import java.util.stream.Collectors; // Not used
+// import java.util.List; // Not used
+// import net.minecraft.component.type.LoreComponent; // Not used
+
 
 /**
  * Main client-side implementation of the ForbiddenBlocks mod.
@@ -50,6 +63,9 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
     
     // Flag to prevent concurrent key handling
     private volatile boolean isHandlingKeyPress = false;
+
+    // Gson instance for serializing components
+    private static final Gson GSON = new GsonBuilder().create(); // Not pretty printing for compactness
 
     // Connection state tracking
     private static boolean isConnected = false;
@@ -123,7 +139,8 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         ForbiddenBlocksConfig.init();
         KeyBindingHelper.registerKeyBinding(FORBID_KEY);
         KeyBindingHelper.registerKeyBinding(TOGGLE_MESSAGES_KEY);
-        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> onBlockPlace(player, hand));
+        UseBlockCallback.EVENT.register(this::onBlockUse); // Pass all params
+        net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(this::onEntityUse);
 
         // Register shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -220,93 +237,141 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
      * This is used to uniquely identify items across different environments.
      * 
      * @param stack The ItemStack to get the identifier for
-     * @return The registry ID as a string, or empty string if invalid
+     * @return The full ItemIdentifier object, or null if invalid
      */
-    private static String getItemIdentifier(ItemStack stack) {
+    private static WorldConfig.ItemIdentifier getItemIdentifier(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             LOGGER.warn("Attempted to get identifier for null/empty stack");
-            return "";
+            return null;
         }
         try {
             Identifier id = Registries.ITEM.getId(stack.getItem());
-            String identifier = id.toString();
+            if (id == null) {
+                LOGGER.warn("Item has no registry ID: {}", stack);
+                return null;
+            }
+            String registryId = id.toString();
             String displayName = stack.getName().getString();
-            LOGGER.info("Item info - Registry ID: {}, Display Name: {}", identifier, displayName);
-            return identifier;
+
+            DataComponentMap currentComponents = stack.getComponents();
+            Map<String, JsonElement> componentMap = new TreeMap<>(); // TreeMap for sorted keys
+
+            // Iterate directly over the components present in the ItemStack's DataComponentMap
+            for (DataComponentMap.Entry<?> entry : currentComponents) {
+                DataComponentType<?> componentType = entry.type();
+                // value() directly gives the component's value, not an Optional
+                Object value = entry.value();
+
+                Identifier componentId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
+                // Ensure componentId is not null (should always be true for valid components)
+                // and value is not null (some components might theoretically have null as a valid value,
+                // though GSON.toJsonTree(null) becomes JsonNull.INSTANCE, which is fine).
+                if (componentId != null) {
+                    componentMap.put(componentId.toString(), GSON.toJsonTree(value));
+                }
+            }
+            String componentsJson = GSON.toJson(componentMap);
+
+            LOGGER.debug("Item info - Registry ID: {}, Display Name: {}, Components: {}", registryId, displayName, componentsJson);
+            return new WorldConfig.ItemIdentifier(registryId, displayName, componentsJson);
         } catch (Exception e) {
-            LOGGER.error("Error getting item identifier", e);
-            return "";
+            LOGGER.error("Error getting item identifier for stack " + stack.toString(), e);
+            return null;
         }
     }
 
     /**
-     * Handles block placement attempts by players.
-     * Prevents placement if the block is in the forbidden list.
-     * 
-     * @param player The player attempting to place the block
-     * @param hand The hand used for placement (main or off hand)
-     * @return ActionResult.FAIL if blocked, ActionResult.PASS otherwise
+     * Handles block usage attempts by players against blocks.
+     * Prevents placement if the block is in the forbidden list, with exceptions.
      */
-    private static ActionResult onBlockPlace(PlayerEntity player, Hand hand) {
-        try {
-            if (!(player instanceof ClientPlayerEntity clientPlayer)) {
-                return ActionResult.PASS;
-            }
-
-
-            ItemStack stackInHand;
-            if (hand == Hand.MAIN_HAND) {
-                stackInHand = clientPlayer.getMainHandStack();
-            } else if (hand == Hand.OFF_HAND) {
-                stackInHand = clientPlayer.getOffHandStack();
-            } else {
-                // Should not happen with UseBlockCallback, but good practice to handle
-                return ActionResult.PASS;
-            }
-
-            if (stackInHand == null || stackInHand.isEmpty()) { // Check if the selected stack is empty
-                return ActionResult.PASS;
-            }
-
-            String itemId = getItemIdentifier(stackInHand);
-
-            if (itemId.isEmpty()) {
-                return ActionResult.PASS;
-            }
-
-            String itemName = stackInHand.getName().getString();
-            String loreString = "";
-            LoreComponent loreComponent = stackInHand.get(DataComponentTypes.LORE);
-            if (loreComponent != null) {
-                List<Text> loreLines = loreComponent.lines();
-                if (loreLines != null && !loreLines.isEmpty()) {
-                    loreString = loreLines.stream()
-                                          .map(Text::getString)
-                                          .collect(Collectors.joining("\n"));
-                }
-            }
-
-            LOGGER.debug("Checking if item is forbidden - Hand: {}, ID: {}, Name: {}, Lore: {}", hand.toString(), itemId, itemName, loreString);
-            WorldConfig worldConfig = WorldConfig.getCurrentWorld();
-            WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(itemId, itemName, loreString);
-            boolean isForbidden = worldConfig.isItemForbidden(identifier);
-            LOGGER.debug("Item forbidden status: {}", isForbidden);
-
-
-            if (isForbidden) {
-                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
-                }
-                LOGGER.info("Blocked placement of forbidden item: {} ({}) - Hand: {}, Lore: {}", itemName, itemId, hand.toString(), loreString);
-
-                return ActionResult.FAIL;
-            }
-
+    private ActionResult onBlockUse(PlayerEntity player, net.minecraft.world.World world, Hand hand, net.minecraft.util.hit.BlockHitResult hitResult) {
+        if (!(player instanceof ClientPlayerEntity clientPlayer)) {
             return ActionResult.PASS;
-        } catch (Exception e) {
-            LOGGER.error("Error checking block placement for hand " + hand.toString(), e);
-            return ActionResult.PASS; // On error, allow placement to prevent disruption
         }
+
+        ItemStack stackInHand = player.getStackInHand(hand);
+        if (stackInHand.isEmpty()) {
+            return ActionResult.PASS;
+        }
+
+        WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stackInHand);
+        if (itemIdentifier == null) {
+            LOGGER.warn("onBlockUse: Could not get ItemIdentifier for stack: {}", stackInHand);
+            return ActionResult.PASS; // Safety: pass if item can't be identified
+        }
+
+        String itemName = stackInHand.getName().getString();
+        WorldConfig worldConfig = WorldConfig.getCurrentWorld();
+        boolean isForbidden = worldConfig.isItemForbidden(itemIdentifier);
+
+        LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden, hitResult.getBlockPos());
+
+        if (isForbidden) {
+            net.minecraft.block.BlockState targetBlockState = world.getBlockState(hitResult.getBlockPos());
+            net.minecraft.block.Block targetBlock = targetBlockState.getBlock();
+
+            // Exception: Interacting with containers (BlockEntityProvider) or Doors with a forbidden item in MAIN_HAND should be allowed.
+            // This allows opening chests, doors, etc., even if holding a forbidden item.
+            if (hand == Hand.MAIN_HAND && (targetBlock instanceof net.minecraft.block.entity.BlockEntityProvider || targetBlock instanceof net.minecraft.block.DoorBlock)) {
+                LOGGER.info("Allowing interaction with container/door '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                return ActionResult.PASS;
+            }
+
+            // If the item is forbidden and it's not an allowed interaction (like opening a chest with main hand),
+            // then block the action (which is usually placing the block).
+            if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
+            }
+            LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) with {} hand on block {}", itemName, itemIdentifier.getRegistryId(), hand, targetBlock.getName().getString());
+            return ActionResult.FAIL;
+        }
+
+        return ActionResult.PASS;
+    }
+
+    /**
+     * Handles entity usage attempts by players.
+     * Prevents interaction if the item is forbidden, with exceptions for item frames and living entities.
+     */
+    private ActionResult onEntityUse(PlayerEntity player, net.minecraft.world.World world, Hand hand, net.minecraft.entity.Entity entity, @org.jetbrains.annotations.Nullable net.minecraft.util.hit.EntityHitResult hitResult) {
+        if (!(player instanceof ClientPlayerEntity clientPlayer)) {
+            return ActionResult.PASS;
+        }
+
+        ItemStack stackInHand = player.getStackInHand(hand);
+        if (stackInHand.isEmpty()) {
+            return ActionResult.PASS;
+        }
+
+        WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stackInHand);
+        if (itemIdentifier == null) {
+            LOGGER.warn("onEntityUse: Could not get ItemIdentifier for stack: {}", stackInHand);
+            return ActionResult.PASS;
+        }
+
+        String itemName = stackInHand.getName().getString();
+        WorldConfig worldConfig = WorldConfig.getCurrentWorld();
+        boolean isForbidden = worldConfig.isItemForbidden(itemIdentifier);
+
+        LOGGER.debug("onEntityUse: Item: {}, Hand: {}, Forbidden: {}, TargetEntity: {}", itemName, hand, isForbidden, entity.getName().getString());
+
+        if (isForbidden) {
+            // Exception: Interacting with Item Frames or LivingEntities (like villagers) with a forbidden item in MAIN_HAND should be allowed.
+            // This allows placing items into item frames or trading with villagers.
+            if (hand == Hand.MAIN_HAND && (entity instanceof net.minecraft.entity.decoration.ItemFrameEntity || entity instanceof net.minecraft.entity.LivingEntity)) {
+                 LOGGER.info("Allowing interaction with entity '{}' with forbidden item '{}' in main hand.", entity.getName().getString(), itemName);
+                return ActionResult.PASS;
+            }
+
+            // If the item is forbidden and it's not an allowed entity interaction, block it.
+            // This might prevent attacking with a forbidden "block" item if it's also a weapon.
+            if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                 clientPlayer.sendMessage(Text.of("§cAction with " + itemName + " on " + entity.getName().getString() + " is blocked! (Client-Side)"), false);
+            }
+            LOGGER.info("Blocked entity interaction with forbidden item: {} (Registry: {}) with {} hand on entity {}", itemName, itemIdentifier.getRegistryId(), hand, entity.getName().getString());
+            return ActionResult.FAIL;
+        }
+        return ActionResult.PASS;
     }
 
     /**
@@ -322,26 +387,30 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         }
 
         ItemStack stack = player.getMainHandStack();
-        String registryId = getItemIdentifier(stack);
-        String name = stack.getName().getString();
-        // Skip lore check for now since NBT access methods are causing issues
-        String lore = "";
+        if (stack == null || stack.isEmpty()) {
+            player.sendMessage(Text.of("§cYou must hold an item to forbid/allow it."), false);
+            return;
+        }
 
-        if (registryId.isEmpty()) {
+        String itemName = stack.getName().getString(); // For messages
+        WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stack);
+
+        if (itemIdentifier == null) {
+            player.sendMessage(Text.of("§cCould not identify the item: " + itemName), false);
+            LOGGER.warn("Could not get ItemIdentifier for stack in forbidItem: {}", stack);
             return;
         }
 
         WorldConfig config = WorldConfig.getCurrentWorld();
-        WorldConfig.ItemIdentifier identifier = new WorldConfig.ItemIdentifier(registryId, name, lore);
-        config.toggleItem(identifier);
+        config.toggleItem(itemIdentifier);
         
         // Add user feedback
         if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-            boolean isForbidden = config.isItemForbidden(identifier);
+            boolean isForbidden = config.isItemForbidden(itemIdentifier);
             if (isForbidden) {
-                player.sendMessage(Text.of("§e" + name + " is now forbidden to place. (Client-Side)"), false);
+                player.sendMessage(Text.of("§e" + itemName + " is now forbidden to place. (Client-Side)"), false);
             } else {
-                player.sendMessage(Text.of("§a" + name + " is now allowed again. (Client-Side)"), false);
+                player.sendMessage(Text.of("§a" + itemName + " is now allowed again. (Client-Side)"), false);
             }
         }
     }
