@@ -53,12 +53,26 @@ public class WorldConfig {
     public static class ItemIdentifier {
         private final String registryId;
         private final String name;
-        private final String lore;
+        // Store all components as a sorted JSON string for consistent hashing and equality.
+        // This replaces the 'lore' field, as lore is just one of many components.
+        private final String componentsJson;
 
-        public ItemIdentifier(String registryId, String name, String lore) {
+        public ItemIdentifier(String registryId, String name, String componentsJson) {
             this.registryId = registryId;
             this.name = name;
-            this.lore = lore;
+            this.componentsJson = componentsJson;
+        }
+
+        public String getRegistryId() {
+            return registryId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getComponentsJson() {
+            return componentsJson;
         }
 
         @Override
@@ -68,17 +82,23 @@ public class WorldConfig {
             ItemIdentifier that = (ItemIdentifier) o;
             return Objects.equals(registryId, that.registryId) &&
                     Objects.equals(name, that.name) &&
-                    Objects.equals(lore, that.lore);
+                    Objects.equals(componentsJson, that.componentsJson);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(registryId, name, lore);
+            return Objects.hash(registryId, name, componentsJson);
         }
 
         @Override
         public String toString() {
-            return GSON.toJson(this);
+            // Default GSON serialization should be fine as it will include all fields.
+            // For logging or debugging, you might want a more custom string.
+            return "ItemIdentifier{" +
+                    "registryId='" + registryId + '\'' +
+                    ", name='" + name + '\'' +
+                    ", componentsJson='" + componentsJson + '\'' +
+                    '}';
         }
     }
 
