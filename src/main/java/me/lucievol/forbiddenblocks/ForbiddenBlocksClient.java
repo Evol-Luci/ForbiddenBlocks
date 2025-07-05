@@ -30,7 +30,6 @@ import net.minecraft.block.CaveVines; // Added for general cave vine handling
 import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
-import net.minecraft.block.PlayerSkullBlock;
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
 import net.minecraft.block.SkullBlock;
 import net.minecraft.block.WallSkullBlock;
@@ -254,13 +253,13 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden,
                 hitResult.getBlockPos());
 
-        // Check for PlayerHeadBlock or WallPlayerHeadBlock first
+        // Check for SkullBlock or WallSkullBlock first (covers player heads)
         if (targetBlockInitial instanceof SkullBlock || targetBlockInitial instanceof WallSkullBlock) {
             if (isForbidden && hand == Hand.MAIN_HAND) {
                 if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + " on a player head! (Client-Side)"), false);
+                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + " on a skull block! (Client-Side)"), false);
                 }
-                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) on PlayerHead/WallPlayerHead", itemName, itemIdentifier.getRegistryId());
+                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) on SkullBlock/WallSkullBlock", itemName, itemIdentifier.getRegistryId());
                 return ActionResult.FAIL;
             }
         }
