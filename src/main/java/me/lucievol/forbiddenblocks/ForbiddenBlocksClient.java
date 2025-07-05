@@ -31,6 +31,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Optional; // Added for handling Optional component values
 // import java.util.stream.Collectors; // Not used
 // import java.util.List; // Not used
 // import net.minecraft.component.type.LoreComponent; // Not used
@@ -253,6 +254,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             String registryId = id.toString();
             // Removed duplicate registryId declaration here
             String displayName = stack.getName().getString();
+            LOGGER.debug("getItemIdentifier: Processing item - Registry ID: {}, Display Name: {}", registryId, displayName);
 
             ComponentMap currentComponents = stack.getComponents(); // Use ComponentMap
             Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
@@ -261,18 +263,38 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             for (ComponentType<?> componentType : Registries.DATA_COMPONENT_TYPE) {
                 if (stack.contains(componentType)) {
                     Object actualValue = stack.get(componentType);
-                    if (actualValue != null) { // Should generally be true if contains is true, but good practice
-                        Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
-                        if (componentTypeId != null) {
-                            componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
+
+                    // Explicitly handle Optional values to prevent Gson reflection issues with JPMS
+                    if (actualValue instanceof Optional) {
+                        actualValue = ((Optional<?>) actualValue).orElse(null);
+                    }
+
+                    Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
+
+                    if (componentTypeId != null) { // componentTypeId should ideally never be null if it's from the registry
+                        if (actualValue != null) {
+                            LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}", componentTypeId.toString(), actualValue.getClass().getName());
+                            try {
+                                componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
+                            } catch (Exception e_comp) {
+                                LOGGER.error("getItemIdentifier: Failed to serialize component {} for item {}. Value: {}. Error: {}", componentTypeId.toString(), registryId, actualValue.toString(), e_comp.getMessage(), e_comp);
+                                // Optionally skip this component. For now, it's skipped due to the error.
+                            }
+                        } else { // actualValue is null (either originally or after Optional.orElse(null))
+                            LOGGER.debug("getItemIdentifier: Component {} is present but its value is null for item {}.", componentTypeId.toString(), registryId);
+                            componentJsonMap.put(componentTypeId.toString(), com.google.gson.JsonNull.INSTANCE);
                         }
+                    } else {
+                         LOGGER.warn("getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.", componentType, registryId);
                     }
                 }
             }
             String componentsJson = GSON.toJson(componentJsonMap);
+            LOGGER.debug("getItemIdentifier: Final components JSON for {}: {}", registryId, componentsJson);
 
-            LOGGER.debug("Item info - Registry ID: {}, Display Name: {}, Components: {}", registryId, displayName, componentsJson);
-            return new WorldConfig.ItemIdentifier(registryId, displayName, componentsJson);
+            WorldConfig.ItemIdentifier resultIdentifier = new WorldConfig.ItemIdentifier(registryId, displayName, componentsJson);
+            LOGGER.debug("getItemIdentifier: Created ItemIdentifier: {}", resultIdentifier.toString());
+            return resultIdentifier;
         } catch (Exception e) {
             LOGGER.error("Error getting item identifier for stack " + stack.toString(), e);
             return null;
