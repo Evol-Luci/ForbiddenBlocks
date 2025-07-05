@@ -3,13 +3,13 @@
 	"id": "forbiddenblocks",
 	"version": "${version}",
 	"name": "ForbiddenBlocks",
-	"description": "This client side fabric Minecraft 1.21.4 mod allows the player to set forbidden blocks being placed. Use this to keep from placing named blocks that you don't want to lose itemname or lore.",
+	"description": "This client side fabric Minecraft 1.21.6 mod allows the player to set forbidden blocks being placed. Use this to keep from placing named blocks that you don't want to lose itemname or lore.",
 	"authors": ["LuciEvol"],
 	"contact": {
 		"homepage": "https://www.evoldigitalproductions.com",
 		"sources": "https://github.com/Evol-Luci/Minecraft_Client_Mods/No_PlaceBlock_Client"
   },
-	"icon": "assets/icon.png",
+	"icon": "ForbiddenIcon.webp",
 	"entrypoints": {
 		"main": [
 			"me.lucievol.forbiddenblocks.ForbiddenBlocks"
