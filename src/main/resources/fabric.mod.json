@@ -1,37 +1,38 @@
 {
-	"schemaVersion": 1,
-	"id": "forbiddenblocks",
-	"version": "${version}",
-	"name": "ForbiddenBlocks",
-	"description": "This client side fabric Minecraft 1.21.4 mod allows the player to set forbidden blocks being placed. Use this to keep from placing named blocks that you don't want to lose itemname or lore.",
-	"authors": ["LuciEvol"],
-	"contact": {
-		"homepage": "https://www.evoldigitalproductions.com",
-		"sources": "https://github.com/Evol-Luci/Minecraft_Client_Mods/No_PlaceBlock_Client"
-  },
-	"icon": "assets/icon.png",
-	"entrypoints": {
-		"main": [
-			"me.lucievol.forbiddenblocks.ForbiddenBlocks"
-		],
-		"fabric-datagen": [
-			"me.lucievol.forbiddenblocks.ForbiddenBlocksDataGenerator"
-		],
-		"client": [
-			"me.lucievol.forbiddenblocks.ForbiddenBlocksClient"
-		]
-	},
-	"mixins": [
-		"forbiddenblocks.mixins.json"
+"schemaVersion": 1,
+"id": "forbiddenblocks",
+"version": "${version}",
+"name": "ForbiddenBlocks",
+"description": "This client side fabric Minecraft 1.21.6 mod allows the player to set forbidden blocks being placed. Use this to keep from placing named blocks that you don't want to lose itemname or lore. Use it to stop accidental torch spamming, and save your precious rockets from being used up by accident.",
+"authors": ["LuciEvol"],
+"contact": {
+	"homepage": "https://www.evoldigitalproductions.com",
+	"sources": "https://github.com/Evol-Luci/Minecraft_Client_Mods/No_PlaceBlock_Client"
+},
+"icon": "assets/forbiddenblocks/ForbiddenIcon.png",
+"entrypoints": {
+	"main": [
+		"me.lucievol.forbiddenblocks.ForbiddenBlocks"
+
 	],
-	"depends": {
-		"fabricloader": ">=0.16.10",
-		"minecraft": "~1.21.4",
-		"java": ">=21",
-		"fabric-api": "*",
-		"cloth-config2": ">=18.0.145"
-	},
-	"suggests": {
-		"another-mod": "*"
-	}
+	"fabric-datagen": [
+		"me.lucievol.forbiddenblocks.ForbiddenBlocksDataGenerator"
+	],
+	"client": [
+		"me.lucievol.forbiddenblocks.ForbiddenBlocksClient"
+	]
+},
+"mixins": [
+	"forbiddenblocks.mixins.json"
+],
+"depends": {
+	"fabricloader": ">=0.16.10",
+	"minecraft": "~1.21.6",
+	"java": ">=21",
+	"fabric-api": ">=0.128.1+1.21.6",
+	"cloth-config2": ">=19.0.147"
+},
+"suggests": {
+	"another-mod": "*"
+}
 }
