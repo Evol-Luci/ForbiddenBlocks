@@ -31,7 +31,7 @@ import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
-import net.minecraft.world.item.MusicDiscItem; // Attempting alternative package
+// import net.minecraft.item.MusicDiscItem; // Commented out as it's not working
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -197,14 +197,14 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     return ActionResult.PASS;
                 }
                 // Special handling for Jukebox: allow if off-hand has a music disc
-                else if (targetBlock instanceof JukeboxBlock) {
-                    ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
-                    if (offHandStack.getItem() instanceof MusicDiscItem) {
-                        LOGGER.info("Allowing jukebox interaction (inserting disc from off-hand) with forbidden item '{}' in main hand.", itemName);
-                        return ActionResult.PASS; // Allow interaction to use the disc
-                    }
+                // else if (targetBlock instanceof JukeboxBlock) {
+                   // ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
+                   // if (offHandStack.getItem() instanceof MusicDiscItem) {
+                   //     LOGGER.info("Allowing jukebox interaction (inserting disc from off-hand) with forbidden item '{}' in main hand.", itemName);
+                   //     return ActionResult.PASS; // Allow interaction to use the disc
+                   // }
                     // If no disc in off-hand, the general deny logic below will apply.
-                }
+                //}
                 else if (targetBlock instanceof SweetBerryBushBlock) {
                     if (targetBlockState.get(Properties.AGE_3) == 3) {
                         LOGGER.info("Allowing sweet berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
