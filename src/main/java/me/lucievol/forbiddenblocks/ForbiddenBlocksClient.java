@@ -18,9 +18,11 @@ import net.minecraft.block.FenceGateBlock;
 import net.minecraft.block.CraftingTableBlock; // Added import
 import net.minecraft.block.AnvilBlock; // Added import
 import net.minecraft.block.GrindstoneBlock; // Added import
-import net.minecraft.block.StonecutterBlock; // Added import
-import net.minecraft.block.CartographyTableBlock; // Added import
-import net.minecraft.block.FletchingTableBlock; // Added import
+import net.minecraft.block.StonecutterBlock;
+import net.minecraft.block.CartographyTableBlock;
+import net.minecraft.block.FletchingTableBlock;
+import net.minecraft.block.SweetBerryBushBlock; // Added import
+import net.minecraft.block.CaveVinesBlock; // Added import
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -262,7 +264,9 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                  targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
                  targetBlock instanceof net.minecraft.block.StonecutterBlock ||
                  targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
-                 targetBlock instanceof net.minecraft.block.FletchingTableBlock)) {
+                 targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
+                 targetBlock instanceof net.minecraft.block.SweetBerryBushBlock ||
+                 targetBlock instanceof net.minecraft.block.CaveVinesBlock)) {
                 LOGGER.info("Allowing interaction with interactive block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                 return ActionResult.PASS;
             }
