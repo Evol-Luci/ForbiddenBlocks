@@ -31,7 +31,7 @@ import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
-import net.minecraft.item.MusicDiscItem; // Added for jukebox interaction
+// import net.minecraft.item.MusicDiscItem; // Added for jukebox interaction
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
