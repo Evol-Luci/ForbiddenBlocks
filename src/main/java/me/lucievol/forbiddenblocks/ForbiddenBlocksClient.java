@@ -251,15 +251,16 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 return null;
             }
             String registryId = id.toString();
-            String registryId = id.toString();
+            // Removed duplicate registryId declaration here
             String displayName = stack.getName().getString();
 
             ComponentMap currentComponents = stack.getComponents(); // Use ComponentMap
             Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
 
-            // Revert to iterating Registries.DATA_COMPONENT_TYPE to avoid ComponentMap.Entry symbol issue
+            // Iterate Registries.DATA_COMPONENT_TYPE and use stack.getOptional for component values
             for (ComponentType<?> componentType : Registries.DATA_COMPONENT_TYPE) {
-                currentComponents.getExplicit(componentType).ifPresent(actualValue -> {
+                // Use stack.getOptional(componentType) instead of currentComponents.getExplicit()
+                stack.getOptional(componentType).ifPresent(actualValue -> {
                     Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
                     if (componentTypeId != null) {
                         componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
