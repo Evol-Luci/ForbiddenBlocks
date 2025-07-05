@@ -29,6 +29,9 @@ import net.minecraft.block.CaveVines; // Added for general cave vine handling
 // import net.minecraft.block.CaveVinesPlantBlock; // Ensure this is removed or stays commented
 import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
+import net.minecraft.block.NoteBlock; // Added for noteblock interaction
+import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
+import net.minecraft.item.MusicDiscItem; // Added for jukebox interaction
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -188,9 +191,19 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
                     targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
                     targetBlock instanceof ButtonBlock ||
-                    targetBlock instanceof LeverBlock) {
+                    targetBlock instanceof LeverBlock ||
+                    targetBlock instanceof NoteBlock) {
                     LOGGER.info("Allowing interaction with utility/job block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                     return ActionResult.PASS;
+                }
+                // Special handling for Jukebox: allow if off-hand has a music disc
+                else if (targetBlock instanceof JukeboxBlock) {
+                    ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
+                    if (offHandStack.getItem() instanceof MusicDiscItem) {
+                        LOGGER.info("Allowing jukebox interaction (inserting disc from off-hand) with forbidden item '{}' in main hand.", itemName);
+                        return ActionResult.PASS; // Allow interaction to use the disc
+                    }
+                    // If no disc in off-hand, the general deny logic below will apply.
                 }
                 else if (targetBlock instanceof SweetBerryBushBlock) {
                     if (targetBlockState.get(Properties.AGE_3) == 3) {
@@ -208,11 +221,20 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         return ActionResult.PASS;
                     }
                 }
+                // If none of the above specific interactions are allowed, then forbid the action.
+                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
+                }
+                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) with {} hand on block {}", itemName, itemIdentifier.getRegistryId(), hand, targetBlock.getName().getString());
+                return ActionResult.FAIL;
             }
+            // If item is forbidden and it's not the main hand (i.e., off-hand or other interaction),
+            // and it's not covered by a more specific rule above, then block it.
+            // This primarily handles placing a forbidden block from the off-hand if that's how interaction works.
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
             }
-            LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) with {} hand on block {}", itemName, itemIdentifier.getRegistryId(), hand, targetBlock.getName().getString());
+            LOGGER.info("Blocked placement/interaction with forbidden item: {} (Registry: {}) with {} hand on block {}", itemName, itemIdentifier.getRegistryId(), hand, targetBlock.getName().getString());
             return ActionResult.FAIL;
         }
         return ActionResult.PASS;
