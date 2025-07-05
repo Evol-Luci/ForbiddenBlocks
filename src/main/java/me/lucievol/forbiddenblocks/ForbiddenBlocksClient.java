@@ -13,6 +13,8 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.TrapdoorBlock; // Added import
+import net.minecraft.block.FenceGateBlock; // Added import
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -243,8 +245,13 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         if (isForbidden) {
             net.minecraft.block.BlockState targetBlockState = world.getBlockState(hitResult.getBlockPos());
             net.minecraft.block.Block targetBlock = targetBlockState.getBlock();
-            if (hand == Hand.MAIN_HAND && (targetBlock instanceof net.minecraft.block.BlockEntityProvider || targetBlock instanceof net.minecraft.block.DoorBlock)) {
-                LOGGER.info("Allowing interaction with container/door '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+            // Updated condition to include TrapdoorBlock and FenceGateBlock
+            if (hand == Hand.MAIN_HAND &&
+                (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
+                 targetBlock instanceof net.minecraft.block.DoorBlock ||
+                 targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
+                 targetBlock instanceof net.minecraft.block.FenceGateBlock)) {
+                LOGGER.info("Allowing interaction with interactive block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                 return ActionResult.PASS;
             }
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
