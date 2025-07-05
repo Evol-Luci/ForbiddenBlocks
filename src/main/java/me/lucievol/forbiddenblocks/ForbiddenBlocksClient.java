@@ -13,18 +13,19 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.block.BlockState; // Added for checking properties
-import net.minecraft.state.property.Properties; // Added for AGE_3 and BERRIES
+import net.minecraft.block.BlockState;
+import net.minecraft.state.property.Properties;
 import net.minecraft.block.TrapdoorBlock;
 import net.minecraft.block.FenceGateBlock;
 import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.block.AnvilBlock; // Added import
-import net.minecraft.block.GrindstoneBlock; // Added import
+import net.minecraft.block.AnvilBlock;
+import net.minecraft.block.GrindstoneBlock;
 import net.minecraft.block.StonecutterBlock;
 import net.minecraft.block.CartographyTableBlock;
 import net.minecraft.block.FletchingTableBlock;
 import net.minecraft.block.SweetBerryBushBlock;
-import net.minecraft.block.CaveVinesHeadBlock; // Changed to CaveVinesHeadBlock
+import net.minecraft.block.CaveVinesHeadBlock;
+// import net.minecraft.block.CaveVinesPlantBlock; // Temporarily commented out due to symbol error
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -66,27 +67,11 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         WorldConfig.updateForCurrentWorld();
     }
 
-    public static boolean isConnected() {
-        return isConnected;
-    }
+    public static boolean isConnected() { return isConnected; }
+    public static String getLastConnectedServer() { return lastConnectedServer; }
 
-    public static String getLastConnectedServer() {
-        return lastConnectedServer;
-    }
-
-    private static final KeyBinding FORBID_KEY = new KeyBinding(
-            "key.forbiddenblocks.forbid",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_O,
-            "category.forbiddenblocks.keys"
-    );
-
-    private static final KeyBinding TOGGLE_MESSAGES_KEY = new KeyBinding(
-            "key.forbiddenblocks.toggle_messages",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_M,
-            "category.forbiddenblocks.keys"
-    );
+    private static final KeyBinding FORBID_KEY = new KeyBinding("key.forbiddenblocks.forbid", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "category.forbiddenblocks.keys");
+    private static final KeyBinding TOGGLE_MESSAGES_KEY = new KeyBinding("key.forbiddenblocks.toggle_messages", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_M, "category.forbiddenblocks.keys");
 
     @Override
     public void onInitializeClient() {
@@ -95,12 +80,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         KeyBindingHelper.registerKeyBinding(TOGGLE_MESSAGES_KEY);
         UseBlockCallback.EVENT.register(this::onBlockUse);
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(this::onEntityUse);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOGGER.info("Client shutting down, saving configurations");
-            WorldConfig.saveAll();
-        }));
-
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> { LOGGER.info("Client shutting down, saving configurations"); WorldConfig.saveAll(); }));
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             ServerInfo serverInfo = client.getCurrentServerEntry();
             String serverAddress = "unknown";
@@ -108,91 +88,46 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 serverAddress = serverInfo.address;
                 LOGGER.info("MULTIPLAYER JOIN EVENT: Connected to server: {}. Server info: {}", serverAddress, serverInfo.name);
             } else {
-                try {
-                    serverAddress = handler.getConnection().getAddress().toString();
-                    LOGGER.info("MULTIPLAYER JOIN EVENT: Connected to server via address: {}", serverAddress);
-                } catch (Exception e) {
-                    LOGGER.error("MULTIPLAYER JOIN EVENT: Failed to get server address from handler", e);
-                }
+                try { serverAddress = handler.getConnection().getAddress().toString(); LOGGER.info("MULTIPLAYER JOIN EVENT: Connected to server via address: {}", serverAddress); }
+                catch (Exception e) { LOGGER.error("MULTIPLAYER JOIN EVENT: Failed to get server address from handler", e); }
             }
             updateConnectionState(true, serverAddress);
         });
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            LOGGER.info("MULTIPLAYER DISCONNECT EVENT: Disconnected from server: {}", lastConnectedServer);
-            updateConnectionState(false, "");
-        });
-
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { LOGGER.info("MULTIPLAYER DISCONNECT EVENT: Disconnected from server: {}", lastConnectedServer); updateConnectionState(false, ""); });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (!isValidGameState(client)) {
-                return;
-            }
-            if (!isHandlingKeyPress) {
-                synchronized (KEY_LOCK) {
-                    try {
-                        isHandlingKeyPress = true;
-                        handleKeyPresses(client);
-                    } finally {
-                        isHandlingKeyPress = false;
-                    }
-                }
-            }
+            if (!isValidGameState(client)) return;
+            if (!isHandlingKeyPress) { synchronized (KEY_LOCK) { try { isHandlingKeyPress = true; handleKeyPresses(client); } finally { isHandlingKeyPress = false; } } }
         });
         LOGGER.info("ForbiddenBlocks client initialized");
     }
 
     private boolean isValidGameState(MinecraftClient client) {
-        if (client == null || client.player == null || client.world == null) {
-            return false;
-        }
-        if (!client.isRunning() || client.currentScreen != null) {
-            return false;
-        }
-        return true;
+        if (client == null || client.player == null || client.world == null) return false;
+        return client.isRunning() && client.currentScreen == null;
     }
 
     private void handleKeyPresses(MinecraftClient client) {
         try {
-            if (FORBID_KEY.wasPressed()) {
-                LOGGER.info("Forbid key pressed - starting forbid item process");
-                client.execute(() -> forbidItem(client.player));
-            }
-            if (TOGGLE_MESSAGES_KEY.wasPressed()) {
-                LOGGER.info("Toggle messages key pressed");
-                client.execute(() -> toggleMessages(client.player));
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error handling key press", e);
-        }
+            if (FORBID_KEY.wasPressed()) { LOGGER.info("Forbid key pressed - starting forbid item process"); client.execute(() -> forbidItem(client.player)); }
+            if (TOGGLE_MESSAGES_KEY.wasPressed()) { LOGGER.info("Toggle messages key pressed"); client.execute(() -> toggleMessages(client.player)); }
+        } catch (Exception e) { LOGGER.error("Error handling key press", e); }
     }
 
     private static WorldConfig.ItemIdentifier getItemIdentifier(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            LOGGER.warn("Attempted to get identifier for null/empty stack");
-            return null;
-        }
+        if (stack == null || stack.isEmpty()) { LOGGER.warn("Attempted to get identifier for null/empty stack"); return null; }
         try {
             Identifier id = Registries.ITEM.getId(stack.getItem());
-            if (id == null) {
-                LOGGER.warn("Item has no registry ID: {}", stack);
-                return null;
-            }
+            if (id == null) { LOGGER.warn("Item has no registry ID: {}", stack); return null; }
             String registryId = id.toString();
             String displayName = stack.getName().getString();
             LOGGER.debug("getItemIdentifier: Processing item - Registry ID: {}, Display Name: {}", registryId, displayName);
-
             ComponentMap currentComponents = stack.getComponents();
             Map<String, JsonElement> componentJsonMap = new TreeMap<>();
-
             for (ComponentType<?> componentType : Registries.DATA_COMPONENT_TYPE) {
                 if (stack.contains(componentType)) {
                     Object actualValue = stack.get(componentType);
                     Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
-
-                    if (actualValue instanceof Optional) {
-                        actualValue = ((Optional<?>) actualValue).orElse(null);
-                    }
-
+                    if (actualValue instanceof Optional) { actualValue = ((Optional<?>) actualValue).orElse(null); }
                     final Object valueForRegistryEntryToString = actualValue;
                     if (actualValue instanceof RegistryEntry) {
                         final Identifier currentComponentIdForLog = componentTypeId;
@@ -204,34 +139,24 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                     return valueForRegistryEntryToString.toString();
                                 });
                     }
-
                     if (componentTypeId != null) {
                         if (actualValue != null) {
                             LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}", componentTypeId.toString(), actualValue.getClass().getName());
-                            try {
-                                componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
-                            } catch (Exception e_comp) {
-                                LOGGER.error("getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}", componentTypeId.toString(), registryId, actualValue.getClass().getName(), e_comp.getMessage(), e_comp);
-                            }
+                            try { componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue)); }
+                            catch (Exception e_comp) { LOGGER.error("getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}", componentTypeId.toString(), registryId, actualValue.getClass().getName(), e_comp.getMessage(), e_comp); }
                         } else {
                             LOGGER.debug("getItemIdentifier: Component {} is present but its value is null for item {}.", componentTypeId.toString(), registryId);
                             componentJsonMap.put(componentTypeId.toString(), com.google.gson.JsonNull.INSTANCE);
                         }
-                    } else {
-                         LOGGER.warn("getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.", componentType, registryId);
-                    }
+                    } else { LOGGER.warn("getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.", componentType, registryId); }
                 }
             }
             String componentsJson = GSON.toJson(componentJsonMap);
             LOGGER.debug("getItemIdentifier: Final components JSON for {}: {}", registryId, componentsJson);
-
             WorldConfig.ItemIdentifier resultIdentifier = new WorldConfig.ItemIdentifier(registryId, displayName, componentsJson);
             LOGGER.debug("getItemIdentifier: Created ItemIdentifier: {}", resultIdentifier.toString());
             return resultIdentifier;
-        } catch (Exception e) {
-            LOGGER.error("Error getting item identifier for stack " + stack.toString(), e);
-            return null;
-        }
+        } catch (Exception e) { LOGGER.error("Error getting item identifier for stack " + stack.toString(), e); return null; }
     }
 
     private ActionResult onBlockUse(PlayerEntity player, net.minecraft.world.World world, Hand hand, net.minecraft.util.hit.BlockHitResult hitResult) {
@@ -239,27 +164,18 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         net.minecraft.block.Block targetBlockInitial = targetBlockStateInitial.getBlock();
         LOGGER.debug("[DEBUG_INTERACTION] onBlockUse - Target Block Class: {}, Target Block State: {}", targetBlockInitial.getClass().getName(), targetBlockStateInitial.toString());
 
-        if (!(player instanceof ClientPlayerEntity clientPlayer)) {
-            return ActionResult.PASS;
-        }
+        if (!(player instanceof ClientPlayerEntity clientPlayer)) return ActionResult.PASS;
         ItemStack stackInHand = player.getStackInHand(hand);
-        if (stackInHand.isEmpty()) {
-            return ActionResult.PASS;
-        }
+        if (stackInHand.isEmpty()) return ActionResult.PASS;
         WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stackInHand);
-        if (itemIdentifier == null) {
-            LOGGER.warn("onBlockUse: Could not get ItemIdentifier for stack: {}", stackInHand);
-            return ActionResult.PASS;
-        }
+        if (itemIdentifier == null) { LOGGER.warn("onBlockUse: Could not get ItemIdentifier for stack: {}", stackInHand); return ActionResult.PASS; }
         String itemName = stackInHand.getName().getString();
         WorldConfig worldConfig = WorldConfig.getCurrentWorld();
         boolean isForbidden = worldConfig.isItemForbidden(itemIdentifier);
         LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden, hitResult.getBlockPos());
-
         if (isForbidden) {
-            BlockState targetBlockState = targetBlockStateInitial; // Use already fetched state
-            net.minecraft.block.Block targetBlock = targetBlockInitial; // Use already fetched block
-
+            BlockState targetBlockState = targetBlockStateInitial;
+            net.minecraft.block.Block targetBlock = targetBlockInitial;
             if (hand == Hand.MAIN_HAND) {
                 if (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
                     targetBlock instanceof net.minecraft.block.DoorBlock ||
@@ -286,15 +202,16 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         return ActionResult.PASS;
                     }
                 }
-                // Specific check for CaveVinesPlantBlock (harvesting glow berries from the body)
-                else if (targetBlock instanceof CaveVinesPlantBlock) {
+                // Specific check for CaveVinesPlantBlock (harvesting glow berries from the body) - Temporarily commented out
+                /*
+                else if (targetBlock instanceof CaveVinesPlantBlock) { // Ensure CaveVinesPlantBlock is correctly imported if re-enabled
                     if (targetBlockState.get(Properties.BERRIES)) {
                         LOGGER.info("Allowing glow berry harvest from CaveVinesPlantBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                         return ActionResult.PASS;
                     }
                 }
+                */
             }
-
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
             }
@@ -305,23 +222,15 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
     }
 
     private ActionResult onEntityUse(PlayerEntity player, net.minecraft.world.World world, Hand hand, net.minecraft.entity.Entity entity, @org.jetbrains.annotations.Nullable net.minecraft.util.hit.EntityHitResult hitResult) {
-        if (!(player instanceof ClientPlayerEntity clientPlayer)) {
-            return ActionResult.PASS;
-        }
+        if (!(player instanceof ClientPlayerEntity clientPlayer)) return ActionResult.PASS;
         ItemStack stackInHand = player.getStackInHand(hand);
-        if (stackInHand.isEmpty()) {
-            return ActionResult.PASS;
-        }
+        if (stackInHand.isEmpty()) return ActionResult.PASS;
         WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stackInHand);
-        if (itemIdentifier == null) {
-            LOGGER.warn("onEntityUse: Could not get ItemIdentifier for stack: {}", stackInHand);
-            return ActionResult.PASS;
-        }
+        if (itemIdentifier == null) { LOGGER.warn("onEntityUse: Could not get ItemIdentifier for stack: {}", stackInHand); return ActionResult.PASS; }
         String itemName = stackInHand.getName().getString();
         WorldConfig worldConfig = WorldConfig.getCurrentWorld();
         boolean isForbidden = worldConfig.isItemForbidden(itemIdentifier);
         LOGGER.debug("onEntityUse: Item: {}, Hand: {}, Forbidden: {}, TargetEntity: {}", itemName, hand, isForbidden, entity.getName().getString());
-
         if (isForbidden) {
             if (hand == Hand.MAIN_HAND && (entity instanceof net.minecraft.entity.decoration.ItemFrameEntity || entity instanceof net.minecraft.entity.LivingEntity)) {
                  LOGGER.info("Allowing interaction with entity '{}' with forbidden item '{}' in main hand.", entity.getName().getString(), itemName);
@@ -337,49 +246,29 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
     }
 
     private void forbidItem(ClientPlayerEntity player) {
-        if (player == null) {
-            LOGGER.warn("Attempted to forbid item for null player");
-            return;
-        }
+        if (player == null) { LOGGER.warn("Attempted to forbid item for null player"); return; }
         ItemStack stack = player.getMainHandStack();
-        if (stack == null || stack.isEmpty()) {
-            player.sendMessage(Text.of("§cYou must hold an item to forbid/allow it."), false);
-            return;
-        }
+        if (stack == null || stack.isEmpty()) { player.sendMessage(Text.of("§cYou must hold an item to forbid/allow it."), false); return; }
         String itemName = stack.getName().getString();
         WorldConfig.ItemIdentifier itemIdentifier = getItemIdentifier(stack);
-        if (itemIdentifier == null) {
-            player.sendMessage(Text.of("§cCould not identify the item: " + itemName), false);
-            LOGGER.warn("Could not get ItemIdentifier for stack in forbidItem: {}", stack);
-            return;
-        }
+        if (itemIdentifier == null) { player.sendMessage(Text.of("§cCould not identify the item: " + itemName), false); LOGGER.warn("Could not get ItemIdentifier for stack in forbidItem: {}", stack); return; }
         WorldConfig config = WorldConfig.getCurrentWorld();
         config.toggleItem(itemIdentifier);
         if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
             boolean isForbidden = config.isItemForbidden(itemIdentifier);
-            if (isForbidden) {
-                player.sendMessage(Text.of("§e" + itemName + " is now forbidden to place. (Client-Side)"), false);
-            } else {
-                player.sendMessage(Text.of("§a" + itemName + " is now allowed again. (Client-Side)"), false);
-            }
+            if (isForbidden) { player.sendMessage(Text.of("§e" + itemName + " is now forbidden to place. (Client-Side)"), false); }
+            else { player.sendMessage(Text.of("§a" + itemName + " is now allowed again. (Client-Side)"), false); }
         }
     }
 
     private static void toggleMessages(ClientPlayerEntity player) {
         try {
-            if (player == null) {
-                LOGGER.warn("Cannot toggle messages - player is null");
-                return;
-            }
+            if (player == null) { LOGGER.warn("Cannot toggle messages - player is null"); return; }
             ForbiddenBlocksConfig config = ForbiddenBlocksConfig.get();
             config.toggleMessages();
             boolean showMessages = config.shouldShowMessages();
             LOGGER.info("Messages are now {}", showMessages ? "enabled" : "disabled");
-            player.sendMessage(Text.of(showMessages ? 
-                "§aForbiddenBlocks messages enabled" : 
-                "§eForbiddenBlocks messages disabled"), false);
-        } catch (Exception e) {
-            LOGGER.error("Error toggling message visibility", e);
-        }
+            player.sendMessage(Text.of(showMessages ? "§aForbiddenBlocks messages enabled" : "§eForbiddenBlocks messages disabled"), false);
+        } catch (Exception e) { LOGGER.error("Error toggling message visibility", e); }
     }
 }
