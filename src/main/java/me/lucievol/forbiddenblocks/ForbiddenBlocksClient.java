@@ -257,15 +257,19 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             ComponentMap currentComponents = stack.getComponents(); // Use ComponentMap
             Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
 
-            // Iterate Registries.DATA_COMPONENT_TYPE and use stack.getOptional for component values
+            Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
+
+            // Iterate Registries.DATA_COMPONENT_TYPE and use stack.contains() + stack.get()
             for (ComponentType<?> componentType : Registries.DATA_COMPONENT_TYPE) {
-                // Use stack.getOptional(componentType) instead of currentComponents.getExplicit()
-                stack.getOptional(componentType).ifPresent(actualValue -> {
-                    Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
-                    if (componentTypeId != null) {
-                        componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
+                if (stack.contains(componentType)) {
+                    Object actualValue = stack.get(componentType);
+                    if (actualValue != null) { // Should generally be true if contains is true, but good practice
+                        Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
+                        if (componentTypeId != null) {
+                            componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
+                        }
                     }
-                });
+                }
             }
             String componentsJson = GSON.toJson(componentJsonMap);
 
