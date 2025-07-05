@@ -30,9 +30,10 @@ import net.minecraft.block.CaveVines; // Added for general cave vine handling
 import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
+import net.minecraft.block.PlayerSkullBlock;
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
-import net.minecraft.block.PlayerHeadBlock;
-import net.minecraft.block.WallPlayerHeadBlock;
+import net.minecraft.block.SkullBlock;
+import net.minecraft.block.WallSkullBlock;
 
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -254,7 +255,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 hitResult.getBlockPos());
 
         // Check for PlayerHeadBlock or WallPlayerHeadBlock first
-        if (targetBlockInitial instanceof PlayerHeadBlock || targetBlockInitial instanceof WallPlayerHeadBlock) {
+        if (targetBlockInitial instanceof SkullBlock || targetBlockInitial instanceof WallSkullBlock) {
             if (isForbidden && hand == Hand.MAIN_HAND) {
                 if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                     clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + " on a player head! (Client-Side)"), false);
