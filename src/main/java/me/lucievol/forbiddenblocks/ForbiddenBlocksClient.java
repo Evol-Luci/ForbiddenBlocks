@@ -13,9 +13,11 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.BlockState; // Added for checking properties
+import net.minecraft.state.property.Properties; // Added for AGE_3 and BERRIES
 import net.minecraft.block.TrapdoorBlock;
 import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.CraftingTableBlock; // Added import
+import net.minecraft.block.CraftingTableBlock;
 import net.minecraft.block.AnvilBlock; // Added import
 import net.minecraft.block.GrindstoneBlock; // Added import
 import net.minecraft.block.StonecutterBlock;
@@ -251,25 +253,41 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden, hitResult.getBlockPos());
 
         if (isForbidden) {
-            net.minecraft.block.BlockState targetBlockState = world.getBlockState(hitResult.getBlockPos());
+            BlockState targetBlockState = world.getBlockState(hitResult.getBlockPos());
             net.minecraft.block.Block targetBlock = targetBlockState.getBlock();
-            // Updated condition to include TrapdoorBlock and FenceGateBlock
-            if (hand == Hand.MAIN_HAND &&
-                (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
-                 targetBlock instanceof net.minecraft.block.DoorBlock ||
-                 targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
-                 targetBlock instanceof net.minecraft.block.FenceGateBlock ||
-                 targetBlock instanceof net.minecraft.block.CraftingTableBlock ||
-                 targetBlock instanceof net.minecraft.block.AnvilBlock ||
-                 targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
-                 targetBlock instanceof net.minecraft.block.StonecutterBlock ||
-                 targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
-                 targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
-                 targetBlock instanceof net.minecraft.block.SweetBerryBushBlock ||
-                 targetBlock instanceof net.minecraft.block.CaveVinesHeadBlock)) { // Changed to CaveVinesHeadBlock
-                LOGGER.info("Allowing interaction with interactive block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
-                return ActionResult.PASS;
+
+            if (hand == Hand.MAIN_HAND) {
+                // General utility/job site blocks
+                if (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
+                    targetBlock instanceof net.minecraft.block.DoorBlock ||
+                    targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
+                    targetBlock instanceof net.minecraft.block.FenceGateBlock ||
+                    targetBlock instanceof net.minecraft.block.CraftingTableBlock ||
+                    targetBlock instanceof net.minecraft.block.AnvilBlock ||
+                    targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
+                    targetBlock instanceof net.minecraft.block.StonecutterBlock ||
+                    targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
+                    targetBlock instanceof net.minecraft.block.FletchingTableBlock) {
+                    LOGGER.info("Allowing interaction with utility/job block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                    return ActionResult.PASS;
+                }
+                // Specific check for SweetBerryBushBlock (harvesting)
+                else if (targetBlock instanceof SweetBerryBushBlock) {
+                    if (targetBlockState.get(Properties.AGE_3) == 3) { // Max age for sweet berries
+                        LOGGER.info("Allowing sweet berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                        return ActionResult.PASS;
+                    }
+                }
+                // Specific check for CaveVinesHeadBlock (harvesting glow berries)
+                else if (targetBlock instanceof CaveVinesHeadBlock) {
+                    if (targetBlockState.get(Properties.BERRIES)) {
+                        LOGGER.info("Allowing glow berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                        return ActionResult.PASS;
+                    }
+                }
             }
+
+            // If no specific interaction is allowed by the above conditions and the item is forbidden, block placement.
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
             }
