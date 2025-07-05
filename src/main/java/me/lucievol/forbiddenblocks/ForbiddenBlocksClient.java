@@ -251,23 +251,20 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 return null;
             }
             String registryId = id.toString();
+            String registryId = id.toString();
             String displayName = stack.getName().getString();
 
             ComponentMap currentComponents = stack.getComponents(); // Use ComponentMap
             Map<String, JsonElement> componentJsonMap = new TreeMap<>(); // TreeMap for sorted keys
 
-            // Iterate directly over the components present in the ItemStack's ComponentMap
-            // ComponentMap itself is iterable with ComponentMap.Entry
-            for (ComponentMap.Entry<?> entry : currentComponents) {
-                ComponentType<?> componentType = entry.type(); // Use ComponentType
-                Object value = entry.value();
-
-                // Assuming Registries.DATA_COMPONENT_TYPE is still the correct registry for ComponentType instances
-                Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
-
-                if (componentTypeId != null) {
-                    componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(value));
-                }
+            // Revert to iterating Registries.DATA_COMPONENT_TYPE to avoid ComponentMap.Entry symbol issue
+            for (ComponentType<?> componentType : Registries.DATA_COMPONENT_TYPE) {
+                currentComponents.getExplicit(componentType).ifPresent(actualValue -> {
+                    Identifier componentTypeId = Registries.DATA_COMPONENT_TYPE.getId(componentType);
+                    if (componentTypeId != null) {
+                        componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
+                    }
+                });
             }
             String componentsJson = GSON.toJson(componentJsonMap);
 
@@ -311,7 +308,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
 
             // Exception: Interacting with containers (BlockEntityProvider) or Doors with a forbidden item in MAIN_HAND should be allowed.
             // This allows opening chests, doors, etc., even if holding a forbidden item.
-            if (hand == Hand.MAIN_HAND && (targetBlock instanceof net.minecraft.block.entity.BlockEntityProvider || targetBlock instanceof net.minecraft.block.DoorBlock)) {
+            if (hand == Hand.MAIN_HAND && (targetBlock instanceof net.minecraft.block.BlockEntityProvider || targetBlock instanceof net.minecraft.block.DoorBlock)) {
                 LOGGER.info("Allowing interaction with container/door '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                 return ActionResult.PASS;
             }
