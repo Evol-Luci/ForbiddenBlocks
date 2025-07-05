@@ -24,8 +24,9 @@ import net.minecraft.block.StonecutterBlock;
 import net.minecraft.block.CartographyTableBlock;
 import net.minecraft.block.FletchingTableBlock;
 import net.minecraft.block.SweetBerryBushBlock;
-import net.minecraft.block.CaveVinesHeadBlock;
-import net.minecraft.block.CaveVinesPlantBlock; // Ensured this is uncommented
+import net.minecraft.block.CaveVines; // Added for general cave vine handling
+// import net.minecraft.block.CaveVinesHeadBlock; // Removed as CaveVines should cover it
+// import net.minecraft.block.CaveVinesPlantBlock; // Ensure this is removed or stays commented
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -193,15 +194,13 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         return ActionResult.PASS;
                     }
                 }
-                else if (targetBlock instanceof CaveVinesHeadBlock) {
-                    if (targetBlockState.get(Properties.BERRIES)) {
-                        LOGGER.info("Allowing glow berry harvest from CaveVinesHeadBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
-                        return ActionResult.PASS;
-                    }
-                }
-                else if (targetBlock instanceof CaveVinesPlantBlock) { // Logic for CaveVinesPlantBlock
-                    if (targetBlockState.get(Properties.BERRIES)) {
-                        LOGGER.info("Allowing glow berry harvest from CaveVinesPlantBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                // Consolidated check for CaveVines (covers head and plant parts if they extend CaveVines)
+                else if (targetBlock instanceof CaveVines) {
+                    // Check if the BERRIES property exists and is true
+                    // CaveVines itself has the BERRIES property. CaveVinesHeadBlock extends CaveVines.
+                    // CaveVinesPlantBlock also extends CaveVines.
+                    if (targetBlockState.contains(Properties.BERRIES) && targetBlockState.get(Properties.BERRIES)) {
+                        LOGGER.info("Allowing glow berry harvest from CaveVines block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                         return ActionResult.PASS;
                     }
                 }
