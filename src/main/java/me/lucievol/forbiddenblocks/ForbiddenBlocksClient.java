@@ -31,7 +31,7 @@ import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
-// import net.minecraft.item.MusicDiscItem; // Commented out as it's not working
+import net.minecraft.item.MusicDiscItem; // Added for jukebox interaction
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -180,31 +180,38 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             BlockState targetBlockState = targetBlockStateInitial;
             net.minecraft.block.Block targetBlock = targetBlockInitial;
             if (hand == Hand.MAIN_HAND) {
-                if (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
-                    targetBlock instanceof net.minecraft.block.DoorBlock ||
-                    targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
-                    targetBlock instanceof net.minecraft.block.FenceGateBlock ||
-                    targetBlock instanceof net.minecraft.block.CraftingTableBlock ||
-                    targetBlock instanceof net.minecraft.block.AnvilBlock ||
-                    targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
-                    targetBlock instanceof net.minecraft.block.StonecutterBlock ||
-                    targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
-                    targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
-                    targetBlock instanceof ButtonBlock ||
-                    targetBlock instanceof LeverBlock ||
-                    targetBlock instanceof NoteBlock) {
-                    LOGGER.info("Allowing interaction with utility/job block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                // If the user has commented out the MusicDiscItem-specific Jukebox logic,
+                // Jukeboxes should not be caught by the general utility block pass rule below.
+                // They should instead fall through to the general FAIL for forbidden main-hand items.
+                if (!(targetBlock instanceof JukeboxBlock) && // Explicitly exclude JukeboxBlock here
+                    (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
+                     targetBlock instanceof net.minecraft.block.DoorBlock ||
+                     targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
+                     targetBlock instanceof net.minecraft.block.FenceGateBlock ||
+                     targetBlock instanceof net.minecraft.block.CraftingTableBlock ||
+                     targetBlock instanceof net.minecraft.block.AnvilBlock ||
+                     targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
+                     targetBlock instanceof net.minecraft.block.StonecutterBlock ||
+                     targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
+                     targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
+                     targetBlock instanceof ButtonBlock ||
+                     targetBlock instanceof LeverBlock ||
+                     targetBlock instanceof NoteBlock)) {
+                    LOGGER.info("Allowing interaction with utility/job block '{}' (excluding Jukebox) with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                     return ActionResult.PASS;
                 }
-                // Special handling for Jukebox: allow if off-hand has a music disc
-                // else if (targetBlock instanceof JukeboxBlock) {
-                   // ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
-                   // if (offHandStack.getItem() instanceof MusicDiscItem) {
-                   //     LOGGER.info("Allowing jukebox interaction (inserting disc from off-hand) with forbidden item '{}' in main hand.", itemName);
-                   //     return ActionResult.PASS; // Allow interaction to use the disc
-                   // }
-                    // If no disc in off-hand, the general deny logic below will apply.
-                //}
+                // The user is expected to have commented out the following block if MusicDiscItem causes build issues.
+                // If it's not commented out and MusicDiscItem resolves, it will take precedence for Jukeboxes.
+                // If it IS commented out, Jukeboxes are not caught by the above utility check, so they will fall to the general FAIL.
+                else if (targetBlock instanceof JukeboxBlock) {
+                    // ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
+                    // if (offHandStack.getItem() instanceof MusicDiscItem) { // This line is problematic if MusicDiscItem is unresolved
+                    //    LOGGER.info("Allowing jukebox interaction (inserting disc from off-hand) with forbidden item '{}' in main hand.", itemName);
+                    //    return ActionResult.PASS; // Allow interaction to use the disc
+                    // }
+                    // If the above MusicDiscItem check is commented out or fails,
+                    // a Jukebox interaction with a forbidden main-hand item will correctly fall through to the general FAIL logic.
+                }
                 else if (targetBlock instanceof SweetBerryBushBlock) {
                     if (targetBlockState.get(Properties.AGE_3) == 3) {
                         LOGGER.info("Allowing sweet berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
