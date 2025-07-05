@@ -27,6 +27,8 @@ import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.block.CaveVines; // Added for general cave vine handling
 // import net.minecraft.block.CaveVinesHeadBlock; // Removed as CaveVines should cover it
 // import net.minecraft.block.CaveVinesPlantBlock; // Ensure this is removed or stays commented
+import net.minecraft.block.ButtonBlock; // Added for button interaction
+import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -184,7 +186,9 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
                     targetBlock instanceof net.minecraft.block.StonecutterBlock ||
                     targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
-                    targetBlock instanceof net.minecraft.block.FletchingTableBlock) {
+                    targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
+                    targetBlock instanceof ButtonBlock ||
+                    targetBlock instanceof LeverBlock) {
                     LOGGER.info("Allowing interaction with utility/job block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                     return ActionResult.PASS;
                 }
