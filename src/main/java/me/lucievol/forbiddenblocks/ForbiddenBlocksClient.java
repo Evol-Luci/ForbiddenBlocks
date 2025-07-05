@@ -25,7 +25,7 @@ import net.minecraft.block.CartographyTableBlock;
 import net.minecraft.block.FletchingTableBlock;
 import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.block.CaveVinesHeadBlock;
-// import net.minecraft.block.CaveVinesPlantBlock; // Temporarily commented out due to symbol error
+import net.minecraft.block.CaveVinesPlantBlock; // Ensured this is uncommented
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -47,9 +47,6 @@ import java.util.Optional;
 import net.minecraft.registry.entry.RegistryEntry;
 
 
-/**
- * Main client-side implementation of the ForbiddenBlocks mod.
- */
 public class ForbiddenBlocksClient implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("forbiddenblocks");
     private static final Object KEY_LOCK = new Object();
@@ -202,15 +199,12 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         return ActionResult.PASS;
                     }
                 }
-                // Specific check for CaveVinesPlantBlock (harvesting glow berries from the body) - Temporarily commented out
-                /*
-                else if (targetBlock instanceof CaveVinesPlantBlock) { // Ensure CaveVinesPlantBlock is correctly imported if re-enabled
+                else if (targetBlock instanceof CaveVinesPlantBlock) { // Logic for CaveVinesPlantBlock
                     if (targetBlockState.get(Properties.BERRIES)) {
                         LOGGER.info("Allowing glow berry harvest from CaveVinesPlantBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                         return ActionResult.PASS;
                     }
                 }
-                */
             }
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
