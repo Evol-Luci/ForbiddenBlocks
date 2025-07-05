@@ -193,7 +193,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         actualValue = ((Optional<?>) actualValue).orElse(null);
                     }
 
-                    final Object valueForRegistryEntryToString = actualValue; // For use in lambda if actualValue is a RegistryEntry
+                    final Object valueForRegistryEntryToString = actualValue;
                     if (actualValue instanceof RegistryEntry) {
                         final Identifier currentComponentIdForLog = componentTypeId;
                         actualValue = ((RegistryEntry<?>) actualValue).getKey()
@@ -201,7 +201,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                 .orElseGet(() -> {
                                     String idForLog = (currentComponentIdForLog != null) ? currentComponentIdForLog.toString() : componentType.toString();
                                     LOGGER.warn("getItemIdentifier: Component {} for item {} is a RegistryEntry without a key. Using its toString() as fallback.", idForLog, registryId);
-                                    return valueForRegistryEntryToString.toString(); // Use the effectively final variable
+                                    return valueForRegistryEntryToString.toString();
                                 });
                     }
 
@@ -235,6 +235,10 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
     }
 
     private ActionResult onBlockUse(PlayerEntity player, net.minecraft.world.World world, Hand hand, net.minecraft.util.hit.BlockHitResult hitResult) {
+        BlockState targetBlockStateInitial = world.getBlockState(hitResult.getBlockPos());
+        net.minecraft.block.Block targetBlockInitial = targetBlockStateInitial.getBlock();
+        LOGGER.debug("[DEBUG_INTERACTION] onBlockUse - Target Block Class: {}, Target Block State: {}", targetBlockInitial.getClass().getName(), targetBlockStateInitial.toString());
+
         if (!(player instanceof ClientPlayerEntity clientPlayer)) {
             return ActionResult.PASS;
         }
@@ -253,11 +257,10 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden, hitResult.getBlockPos());
 
         if (isForbidden) {
-            BlockState targetBlockState = world.getBlockState(hitResult.getBlockPos());
-            net.minecraft.block.Block targetBlock = targetBlockState.getBlock();
+            BlockState targetBlockState = targetBlockStateInitial; // Use already fetched state
+            net.minecraft.block.Block targetBlock = targetBlockInitial; // Use already fetched block
 
             if (hand == Hand.MAIN_HAND) {
-                // General utility/job site blocks
                 if (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
                     targetBlock instanceof net.minecraft.block.DoorBlock ||
                     targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
@@ -271,23 +274,27 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                     LOGGER.info("Allowing interaction with utility/job block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                     return ActionResult.PASS;
                 }
-                // Specific check for SweetBerryBushBlock (harvesting)
                 else if (targetBlock instanceof SweetBerryBushBlock) {
-                    if (targetBlockState.get(Properties.AGE_3) == 3) { // Max age for sweet berries
+                    if (targetBlockState.get(Properties.AGE_3) == 3) {
                         LOGGER.info("Allowing sweet berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                         return ActionResult.PASS;
                     }
                 }
-                // Specific check for CaveVinesHeadBlock (harvesting glow berries)
                 else if (targetBlock instanceof CaveVinesHeadBlock) {
                     if (targetBlockState.get(Properties.BERRIES)) {
-                        LOGGER.info("Allowing glow berry harvest from '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                        LOGGER.info("Allowing glow berry harvest from CaveVinesHeadBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
+                        return ActionResult.PASS;
+                    }
+                }
+                // Specific check for CaveVinesPlantBlock (harvesting glow berries from the body)
+                else if (targetBlock instanceof CaveVinesPlantBlock) {
+                    if (targetBlockState.get(Properties.BERRIES)) {
+                        LOGGER.info("Allowing glow berry harvest from CaveVinesPlantBlock '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                         return ActionResult.PASS;
                     }
                 }
             }
 
-            // If no specific interaction is allowed by the above conditions and the item is forbidden, block placement.
             if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
             }
