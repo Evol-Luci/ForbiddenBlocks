@@ -31,6 +31,8 @@ import net.minecraft.block.ButtonBlock; // Added for button interaction
 import net.minecraft.block.LeverBlock; // Added for lever interaction
 import net.minecraft.block.NoteBlock; // Added for noteblock interaction
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
+import net.minecraft.block.SkullBlock;
+import net.minecraft.block.WallSkullBlock;
 
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -250,6 +252,18 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         boolean isForbidden = worldConfig.isItemForbidden(itemIdentifier);
         LOGGER.debug("onBlockUse: Item: {}, Hand: {}, Forbidden: {}, Target: {}", itemName, hand, isForbidden,
                 hitResult.getBlockPos());
+
+        // Check for SkullBlock or WallSkullBlock first (covers player heads)
+        if (targetBlockInitial instanceof SkullBlock || targetBlockInitial instanceof WallSkullBlock) {
+            if (isForbidden && hand == Hand.MAIN_HAND) {
+                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + " on a skull block! (Client-Side)"), false);
+                }
+                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) on SkullBlock/WallSkullBlock", itemName, itemIdentifier.getRegistryId());
+                return ActionResult.FAIL;
+            }
+        }
+
         if (isForbidden) {
             BlockState targetBlockState = targetBlockStateInitial;
             net.minecraft.block.Block targetBlock = targetBlockInitial;
