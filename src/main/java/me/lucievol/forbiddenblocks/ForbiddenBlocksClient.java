@@ -181,6 +181,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         actualValue = ((Optional<?>) actualValue).orElse(null);
                     }
 
+                    final Object valueForRegistryEntryToString = actualValue; // For use in lambda if actualValue is a RegistryEntry
                     if (actualValue instanceof RegistryEntry) {
                         final Identifier currentComponentIdForLog = componentTypeId;
                         actualValue = ((RegistryEntry<?>) actualValue).getKey()
@@ -188,7 +189,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                 .orElseGet(() -> {
                                     String idForLog = (currentComponentIdForLog != null) ? currentComponentIdForLog.toString() : componentType.toString();
                                     LOGGER.warn("getItemIdentifier: Component {} for item {} is a RegistryEntry without a key. Using its toString() as fallback.", idForLog, registryId);
-                                    return actualValue.toString();
+                                    return valueForRegistryEntryToString.toString(); // Use the effectively final variable
                                 });
                     }
 
