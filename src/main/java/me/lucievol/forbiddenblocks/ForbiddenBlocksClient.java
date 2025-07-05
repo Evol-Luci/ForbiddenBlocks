@@ -13,8 +13,14 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.block.TrapdoorBlock; // Added import
-import net.minecraft.block.FenceGateBlock; // Added import
+import net.minecraft.block.TrapdoorBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.CraftingTableBlock; // Added import
+import net.minecraft.block.AnvilBlock; // Added import
+import net.minecraft.block.GrindstoneBlock; // Added import
+import net.minecraft.block.StonecutterBlock; // Added import
+import net.minecraft.block.CartographyTableBlock; // Added import
+import net.minecraft.block.FletchingTableBlock; // Added import
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -250,7 +256,13 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 (targetBlock instanceof net.minecraft.block.BlockEntityProvider ||
                  targetBlock instanceof net.minecraft.block.DoorBlock ||
                  targetBlock instanceof net.minecraft.block.TrapdoorBlock ||
-                 targetBlock instanceof net.minecraft.block.FenceGateBlock)) {
+                 targetBlock instanceof net.minecraft.block.FenceGateBlock ||
+                 targetBlock instanceof net.minecraft.block.CraftingTableBlock ||
+                 targetBlock instanceof net.minecraft.block.AnvilBlock ||
+                 targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
+                 targetBlock instanceof net.minecraft.block.StonecutterBlock ||
+                 targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
+                 targetBlock instanceof net.minecraft.block.FletchingTableBlock)) {
                 LOGGER.info("Allowing interaction with interactive block '{}' with forbidden item '{}' in main hand.", targetBlock.getName().getString(), itemName);
                 return ActionResult.PASS;
             }
