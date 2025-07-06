@@ -19,7 +19,7 @@ _🔒 Protect your rare artifacts_
 
 -----------------------------------------
 
-special mementos and custom-named blocks protected from accidental placement! No more losing that legendary sword or story-rich items to a mis click! 🎭🏆
+Keep special mementos and custom-named blocks protected from accidental placement! No more losing that legendary sword or story-rich items to a misclick! 🎭🏆
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -27,10 +27,12 @@ _✨ Key Features_
 
 --------------------------
 
-✅ Block & Named Item Placement Prevention – Define a list of blocks AND named items that CANNOT be placed! ❌🏗️🔖
-💬 User Feedback – Get configurable messages when you try to place forbidden blocks or protected artifacts! 🔔
-🛠️ Minecraft Controls Menu Integration – Adjust settings easily through the traditional Minecraft Menu! 🎛️
-🌎 World-Specific Configurations – Each Minecraft world or server can have its own settings! 🌐
+✅ **Block & Named Item Placement Prevention** – Define a list of blocks AND named items that CANNOT be placed! ❌🏗️🔖
+🚀 **Rocket Placement Prevention** - Forbid the placement of rockets, saving you from wasting them on misclicks! 🎆
+🤝 **Interaction Passthrough** - Interact with interactable objects (like chests, doors, etc.) whilst you have a forbidden item in your hand! 🚪
+💬 **User Feedback** – Get configurable messages when you try to place forbidden blocks or protected artifacts! 🔔
+🛠️ **Minecraft Controls Menu Integration** – Adjust settings easily through the traditional Minecraft Menu! 🎛️
+🌎 **World-Specific Configurations** – Each Minecraft world or server can have its own settings! 🌐
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,13 +52,13 @@ _✨ Key Features_
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
- _🌍 Global Settings_----------
+ _🌍 Global Settings_----------
 
-                  📜 Managed through ForbiddenBlocksConfig – toggle visibility of feedback messages in-game!
+                  📜 Managed through ForbiddenBlocksConfig – toggle visibility of feedback messages in-game!
 
- _🗂️ World-Specific Settings_----------
+ _🗂️ World-Specific Settings_----------
 
-                    Each world or server gets its own JSON file for custom forbidden block & named item lists!
+                    Each world or server gets its own JSON file for custom forbidden block & named item lists!
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -71,8 +73,8 @@ _📌 Multiplayer: config/forbiddenblocks/worlds/multiplayer_[serveraddress].jso
 ### **🎮 Usage**
 
 -----------------------
-                   🛑 Toggle Forbidden Blocks & Named Items_ – Press O (default) to enable/disable placement restrictions.
-                   💬 Toggle Feedback Messages_ – Press M (default) to show/hide feedback messages.
+                   🛑 **Toggle Forbidden Blocks & Named Items** – Press O (default) to enable/disable placement restrictions.
+                   💬 **Toggle Feedback Messages** – Press M (default) to show/hide feedback messages.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -91,7 +93,7 @@ _🔑 Keys & Quest Items 🗝️_
 
 ------------------------------
 🔹 _Fabric Loader_ – >= 0.16.10
-🔹 _Minecraft_ – ~1.21.4
+🔹 _Minecraft_ – ~1.21.6
 🔹 _Java_ – >= 21 ☕
 🔹 _Fabric API_ – Required for core functionality.
 🔹 _Cloth Config_ – Handles configuration management.
