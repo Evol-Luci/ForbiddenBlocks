@@ -44,11 +44,15 @@ import net.minecraft.component.ComponentType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Optional;
@@ -58,7 +62,6 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("forbiddenblocks");
     private static final Object KEY_LOCK = new Object();
     private volatile boolean isHandlingKeyPress = false;
-    private static final Gson GSON = new GsonBuilder().create();
     private static boolean isConnected = false;
     private static String lastConnectedServer = "";
 
@@ -193,32 +196,40 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                     return valueForRegistryEntryToString.toString();
                                 });
                     }
-                    if (componentTypeId != null) {
-                        if (actualValue != null) {
-                            LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}",
-                                    componentTypeId.toString(), actualValue.getClass().getName());
-                            try {
-                                componentJsonMap.put(componentTypeId.toString(), GSON.toJsonTree(actualValue));
-                            } catch (Exception e_comp) {
-                                LOGGER.error(
-                                        "getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}",
-                                        componentTypeId.toString(), registryId, actualValue.getClass().getName(),
-                                        e_comp.getMessage(), e_comp);
-                            }
-                        } else {
-                            LOGGER.debug(
-                                    "getItemIdentifier: Component {} is present but its value is null for item {}.",
-                                    componentTypeId.toString(), registryId);
-                            componentJsonMap.put(componentTypeId.toString(), com.google.gson.JsonNull.INSTANCE);
-                        }
-                    } else {
-                        LOGGER.warn(
-                                "getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.",
-                                componentType, registryId);
-                    }
+                     if (componentTypeId != null) {
+                         String componentIdStr = componentTypeId.toString();
+                         // Skip components that are not identifying or are excessively large
+                         if (componentIdStr.equals("minecraft:item_name") ||
+                             componentIdStr.equals("minecraft:item_model") ||
+                             componentIdStr.equals("minecraft:attribute_modifiers") ||
+                             componentIdStr.equals("minecraft:break_sound")) {
+                             continue;
+                         }
+                         if (actualValue != null) {
+                             LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}",
+                                     componentIdStr, actualValue.getClass().getName());
+                             try {
+                                 componentJsonMap.put(componentIdStr, WorldConfig.GSON.toJsonTree(actualValue));
+                             } catch (Exception e_comp) {
+                                 LOGGER.error(
+                                         "getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}",
+                                         componentIdStr, registryId, actualValue.getClass().getName(),
+                                         e_comp.getMessage(), e_comp);
+                             }
+                         } else {
+                             LOGGER.debug(
+                                     "getItemIdentifier: Component {} is present but its value is null for item {}.",
+                                     componentIdStr, registryId);
+                             componentJsonMap.put(componentIdStr, com.google.gson.JsonNull.INSTANCE);
+                         }
+                     } else {
+                         LOGGER.warn(
+                                 "getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.",
+                                 componentType, registryId);
+                     }
                 }
             }
-            String componentsJson = GSON.toJson(componentJsonMap);
+            String componentsJson = WorldConfig.GSON.toJson(componentJsonMap);
             LOGGER.debug("getItemIdentifier: Final components JSON for {}: {}", registryId, componentsJson);
             WorldConfig.ItemIdentifier resultIdentifier = new WorldConfig.ItemIdentifier(registryId, displayName,
                     componentsJson);

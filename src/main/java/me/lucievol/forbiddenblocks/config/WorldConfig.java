@@ -2,6 +2,11 @@ package me.lucievol.forbiddenblocks.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -16,7 +21,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WorldConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("forbiddenblocks");
     private static final String CONFIG_DIR = "config/forbiddenblocks/worlds";
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final ConcurrentHashMap<String, WorldConfig> WORLD_CONFIGS = new ConcurrentHashMap<>();
     private static final Object CONFIG_LOCK = new Object();
     private static final TypeToken<HashSet<ItemIdentifier>> ITEM_IDENTIFIER_SET_TYPE = new TypeToken<HashSet<ItemIdentifier>>(){};
@@ -60,7 +69,40 @@ public class WorldConfig {
         public ItemIdentifier(String registryId, String name, String componentsJson) {
             this.registryId = registryId;
             this.name = name;
-            this.componentsJson = componentsJson;
+            if (componentsJson != null && !componentsJson.isEmpty()) {
+                JsonElement element = JsonParser.parseString(componentsJson);
+                this.componentsJson = GSON.toJson(sortJsonElement(element));
+            } else {
+                this.componentsJson = componentsJson;
+            }
+        }
+
+        private static JsonElement sortJsonElement(JsonElement element) {
+            if (element.isJsonObject()) {
+                JsonObject obj = element.getAsJsonObject();
+                JsonObject sortedObj = new JsonObject();
+                List<Map.Entry<String, JsonElement>> entries = new ArrayList<>(obj.entrySet());
+                entries.sort(Map.Entry.comparingByKey());
+                for (Map.Entry<String, JsonElement> entry : entries) {
+                    sortedObj.add(entry.getKey(), sortJsonElement(entry.getValue()));
+                }
+                return sortedObj;
+            } else if (element.isJsonArray()) {
+                JsonArray array = element.getAsJsonArray();
+                JsonArray sortedArray = new JsonArray();
+                List<JsonElement> elements = new ArrayList<>();
+                for (JsonElement jsonElement : array) {
+                    elements.add(sortJsonElement(jsonElement));
+                }
+                // Note: Sorting array elements is not done here as it might change the meaning of the data.
+                // We only sort the elements within the array recursively.
+                for (JsonElement sortedElement : elements) {
+                    sortedArray.add(sortedElement);
+                }
+                return sortedArray;
+            } else {
+                return element;
+            }
         }
 
         public String getRegistryId() {
@@ -146,33 +188,35 @@ public class WorldConfig {
                     client.getServer().getSaveProperties().getLevelName() : "unknown";
                 currentConnectionId = "singleplayer_" + worldName;
                 LOGGER.info("Updated connection: Singleplayer world '{}'", worldName);
-            } else {
-                ServerInfo serverInfo = client.getCurrentServerEntry();
-                String serverAddress = "unknown";
-                
-                if (serverInfo != null) {
-                    // Use the server address from the server info for consistency
-                    serverAddress = serverInfo.address;
-                    LOGGER.info("Server info available: {}", serverInfo.address);
-                } else {
-                    // Fallback to network handler info if server info isn't available
-                    try {
-                        serverAddress = networkHandler.getConnection().getAddress().toString();
-                        // Clean up address format (remove "/" prefix if present)
-                        if (serverAddress.startsWith("/")) {
-                            serverAddress = serverAddress.substring(1);
-                        }
-                        LOGGER.info("Using network handler address: {}", serverAddress);
-                    } catch (Exception e) {
-                        LOGGER.warn("Could not get server address from network handler", e);
-                    }
-                }
-                
-                // Sanitize server address to create a valid filename
-                serverAddress = serverAddress.replace(':', '_');
-                currentConnectionId = "multiplayer_" + serverAddress;
-                LOGGER.info("Updated connection: Multiplayer server '{}' -> config ID '{}'", serverAddress, currentConnectionId);
-            }
+             } else {
+                 ServerInfo serverInfo = client.getCurrentServerEntry();
+                 String serverAddress = "unknown";
+
+                 if (serverInfo != null) {
+                     // Use the server address from the server info for consistency
+                     serverAddress = serverInfo.address;
+                     LOGGER.info("Server info available: {}", serverInfo.address);
+                 } else {
+                     // Fallback to network handler info if server info isn't available
+                     try {
+                         serverAddress = networkHandler.getConnection().getAddress().toString();
+                         // Clean up address format (remove "/" prefix if present)
+                         if (serverAddress.startsWith("/")) {
+                             serverAddress = serverAddress.substring(1);
+                         }
+                         LOGGER.info("Using network handler address: {}", serverAddress);
+                     } catch (Exception e) {
+                         LOGGER.warn("Could not get server address from network handler", e);
+                     }
+                 }
+
+                 // Extract base domain/IP without port
+                 String baseAddress = serverAddress.split(":")[0];
+                 // Sanitize base address to create a valid filename (though no colon now)
+                 baseAddress = baseAddress.replace(':', '_');
+                 currentConnectionId = "multiplayer_" + baseAddress;
+                 LOGGER.info("Updated connection: Multiplayer server '{}' -> base '{}' -> config ID '{}'", serverAddress, baseAddress, currentConnectionId);
+             }
             
             // Ensure we clear and reload the correct config
             WorldConfig config = getCurrentWorld();
@@ -292,10 +336,6 @@ public class WorldConfig {
     }
 
     private void save() {
-        if (!isDirty) {
-            LOGGER.debug("Not saving config for world {} as it is not dirty", worldId);
-            return;
-        }
 
         synchronized (CONFIG_LOCK) {
             try {

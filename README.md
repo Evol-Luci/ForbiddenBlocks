@@ -107,7 +107,7 @@ _🔑 Keys & Quest Items 🗝️_
 📝 This project is licensed under the MIT License. See the [LICENSE](https://github.com/Evol-Luci/ForbiddenBlocks/releases/LICENSE) file for details.
 
 **👤 Author**
-_👩‍💻 LuciEvol – [Website](https://github.com/Evol-Luci/ForbiddenBlocks/releases/new#)_
+_👩‍💻 Luci_Evol – [Website](https://www.evoldigitalproductions.com)_
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
