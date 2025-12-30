@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  forbiddenblocks-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ForbiddenBlocks_Dev
+    volumes:
+      - .:/workspace
+      - ~/.gradle:/home/devuser/.gradle:cached
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    environment:
+      - GRADLE_USER_HOME=/home/devuser/.gradle
+    command: /bin/bash

@@ -1,6 +1,5 @@
 package me.lucievol.forbiddenblocks;
 
-import me.lucievol.forbiddenblocks.config.ForbiddenBlocksConfig;
 import me.lucievol.forbiddenblocks.config.WorldConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -15,15 +14,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.property.Properties;
-import net.minecraft.block.TrapdoorBlock;
-import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.GrindstoneBlock;
-import net.minecraft.block.StonecutterBlock;
-import net.minecraft.block.CartographyTableBlock;
-import net.minecraft.block.FletchingTableBlock;
-import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.block.CaveVines; // Added for general cave vine handling
 // import net.minecraft.block.CaveVinesHeadBlock; // Removed as CaveVines should cover it
 // import net.minecraft.block.CaveVinesPlantBlock; // Ensure this is removed or stays commented
@@ -33,6 +23,7 @@ import net.minecraft.block.NoteBlock; // Added for noteblock interaction
 import net.minecraft.block.JukeboxBlock; // Added for jukebox interaction
 import net.minecraft.block.SkullBlock;
 import net.minecraft.block.WallSkullBlock;
+import net.minecraft.block.SweetBerryBushBlock;
 
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -41,18 +32,11 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.lwjgl.glfw.GLFW;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.gson.JsonElement;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Optional;
@@ -82,16 +66,26 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         return lastConnectedServer;
     }
 
-    private static final KeyBinding FORBID_KEY = new KeyBinding("key.forbiddenblocks.forbid", InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_O, "category.forbiddenblocks.keys");
-    private static final KeyBinding TOGGLE_MESSAGES_KEY = new KeyBinding("key.forbiddenblocks.toggle_messages",
-            InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_M, "category.forbiddenblocks.keys");
+    private static final KeyBinding.Category FORBIDDEN_BLOCKS_CATEGORY = KeyBinding.Category
+            .create(Identifier.of("forbiddenblocks", "keys"));
+
+    private static KeyBinding FORBID_KEY;
+    private static KeyBinding TOGGLE_MESSAGES_KEY;
 
     @Override
     public void onInitializeClient() {
-        ForbiddenBlocksConfig.init();
-        KeyBindingHelper.registerKeyBinding(FORBID_KEY);
-        KeyBindingHelper.registerKeyBinding(TOGGLE_MESSAGES_KEY);
+        FORBID_KEY = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.forbiddenblocks.forbid",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_SEMICOLON,
+                FORBIDDEN_BLOCKS_CATEGORY));
+
+        TOGGLE_MESSAGES_KEY = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.forbiddenblocks.toggle_messages",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_APOSTROPHE,
+                FORBIDDEN_BLOCKS_CATEGORY));
+
         UseBlockCallback.EVENT.register(this::onBlockUse);
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(this::onEntityUse);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -196,37 +190,37 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                     return valueForRegistryEntryToString.toString();
                                 });
                     }
-                     if (componentTypeId != null) {
-                         String componentIdStr = componentTypeId.toString();
-                         // Skip components that are not identifying or are excessively large
-                         if (componentIdStr.equals("minecraft:item_name") ||
-                             componentIdStr.equals("minecraft:item_model") ||
-                             componentIdStr.equals("minecraft:attribute_modifiers") ||
-                             componentIdStr.equals("minecraft:break_sound")) {
-                             continue;
-                         }
-                         if (actualValue != null) {
-                             LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}",
-                                     componentIdStr, actualValue.getClass().getName());
-                             try {
-                                 componentJsonMap.put(componentIdStr, WorldConfig.GSON.toJsonTree(actualValue));
-                             } catch (Exception e_comp) {
-                                 LOGGER.error(
-                                         "getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}",
-                                         componentIdStr, registryId, actualValue.getClass().getName(),
-                                         e_comp.getMessage(), e_comp);
-                             }
-                         } else {
-                             LOGGER.debug(
-                                     "getItemIdentifier: Component {} is present but its value is null for item {}.",
-                                     componentIdStr, registryId);
-                             componentJsonMap.put(componentIdStr, com.google.gson.JsonNull.INSTANCE);
-                         }
-                     } else {
-                         LOGGER.warn(
-                                 "getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.",
-                                 componentType, registryId);
-                     }
+                    if (componentTypeId != null) {
+                        String componentIdStr = componentTypeId.toString();
+                        // Skip components that are not identifying or are excessively large
+                        if (componentIdStr.equals("minecraft:item_name") ||
+                                componentIdStr.equals("minecraft:item_model") ||
+                                componentIdStr.equals("minecraft:attribute_modifiers") ||
+                                componentIdStr.equals("minecraft:break_sound")) {
+                            continue;
+                        }
+                        if (actualValue != null) {
+                            LOGGER.debug("getItemIdentifier: Found component - ID: {}, Value Class: {}",
+                                    componentIdStr, actualValue.getClass().getName());
+                            try {
+                                componentJsonMap.put(componentIdStr, WorldConfig.GSON.toJsonTree(actualValue));
+                            } catch (Exception e_comp) {
+                                LOGGER.error(
+                                        "getItemIdentifier: Failed to serialize component {} for item {}. Value Class: {}. Error: {}",
+                                        componentIdStr, registryId, actualValue.getClass().getName(),
+                                        e_comp.getMessage(), e_comp);
+                            }
+                        } else {
+                            LOGGER.debug(
+                                    "getItemIdentifier: Component {} is present but its value is null for item {}.",
+                                    componentIdStr, registryId);
+                            componentJsonMap.put(componentIdStr, com.google.gson.JsonNull.INSTANCE);
+                        }
+                    } else {
+                        LOGGER.warn(
+                                "getItemIdentifier: ComponentType {} has null ID in registry for item {}. Skipping.",
+                                componentType, registryId);
+                    }
                 }
             }
             String componentsJson = WorldConfig.GSON.toJson(componentJsonMap);
@@ -267,10 +261,12 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         // Check for SkullBlock or WallSkullBlock first (covers player heads)
         if (targetBlockInitial instanceof SkullBlock || targetBlockInitial instanceof WallSkullBlock) {
             if (isForbidden && hand == Hand.MAIN_HAND) {
-                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
-                    clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + " on a skull block! (Client-Side)"), false);
+                if (ForbiddenBlocks.CONFIG.showMessages()) {
+                    clientPlayer.sendMessage(
+                            Text.of("§cYou cannot place " + itemName + " on a skull block! (Client-Side)"), false);
                 }
-                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) on SkullBlock/WallSkullBlock", itemName, itemIdentifier.getRegistryId());
+                LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) on SkullBlock/WallSkullBlock",
+                        itemName, itemIdentifier.getRegistryId());
                 return ActionResult.FAIL;
             }
         }
@@ -293,7 +289,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                                 targetBlock instanceof net.minecraft.block.GrindstoneBlock ||
                                 targetBlock instanceof net.minecraft.block.StonecutterBlock ||
                                 targetBlock instanceof net.minecraft.block.CartographyTableBlock ||
-                                targetBlock instanceof net.minecraft.block.FletchingTableBlock ||
+                                targetBlock == net.minecraft.block.Blocks.FLETCHING_TABLE ||
                                 targetBlock instanceof ButtonBlock ||
                                 targetBlock instanceof LeverBlock ||
                                 targetBlock instanceof NoteBlock)) {
@@ -342,7 +338,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 }
                 // If none of the above specific interactions are allowed, then forbid the
                 // action.
-                if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+                if (ForbiddenBlocks.CONFIG.showMessages()) {
                     clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
                 }
                 LOGGER.info("Blocked placement of forbidden item: {} (Registry: {}) with {} hand on block {}", itemName,
@@ -354,7 +350,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
             // and it's not covered by a more specific rule above, then block it.
             // This primarily handles placing a forbidden block from the off-hand if that's
             // how interaction works.
-            if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+            if (ForbiddenBlocks.CONFIG.showMessages()) {
                 clientPlayer.sendMessage(Text.of("§cYou cannot place " + itemName + "! (Client-Side)"), false);
             }
             LOGGER.info("Blocked placement/interaction with forbidden item: {} (Registry: {}) with {} hand on block {}",
@@ -389,7 +385,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                         entity.getName().getString(), itemName);
                 return ActionResult.PASS;
             }
-            if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+            if (ForbiddenBlocks.CONFIG.showMessages()) {
                 clientPlayer.sendMessage(Text.of("§cAction with " + itemName + " on " + entity.getName().getString()
                         + " is blocked! (Client-Side)"), false);
             }
@@ -419,7 +415,7 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
         }
         WorldConfig config = WorldConfig.getCurrentWorld();
         config.toggleItem(itemIdentifier);
-        if (ForbiddenBlocksConfig.get().shouldShowMessages()) {
+        if (ForbiddenBlocks.CONFIG.showMessages()) {
             boolean isForbidden = config.isItemForbidden(itemIdentifier);
             if (isForbidden) {
                 player.sendMessage(Text.of("§e" + itemName + " is now forbidden to place. (Client-Side)"), false);
@@ -435,9 +431,8 @@ public class ForbiddenBlocksClient implements ClientModInitializer {
                 LOGGER.warn("Cannot toggle messages - player is null");
                 return;
             }
-            ForbiddenBlocksConfig config = ForbiddenBlocksConfig.get();
-            config.toggleMessages();
-            boolean showMessages = config.shouldShowMessages();
+            ForbiddenBlocks.CONFIG.showMessages(!ForbiddenBlocks.CONFIG.showMessages());
+            boolean showMessages = ForbiddenBlocks.CONFIG.showMessages();
             LOGGER.info("Messages are now {}", showMessages ? "enabled" : "disabled");
             player.sendMessage(Text
                     .of(showMessages ? "§aForbiddenBlocks messages enabled" : "§eForbiddenBlocks messages disabled"),

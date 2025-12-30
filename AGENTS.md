@@ -1,6 +1,6 @@
 # Agent Guidelines for ForbiddenBlocks
 
-Minecraft Fabric mod (Java 21) using Gradle, Fabric API, ModMenu, AutoConfig, ClothConfig.
+Minecraft Fabric mod (Java 21) using Gradle, Fabric API, ModMenu, owo-lib.
 
 ## Build/Lint/Test Commands
 * **Build:** `./gradlew build` - compiles and assembles mod JAR
@@ -14,7 +14,7 @@ Minecraft Fabric mod (Java 21) using Gradle, Fabric API, ModMenu, AutoConfig, Cl
 ## Code Style Guidelines
 * **Formatting:** 4 spaces indentation, opening braces same line, spaces around operators
 * **Naming:** PascalCase classes, camelCase methods/fields, SCREAMING_SNAKE_CASE static finals
-* **Imports:** Standard Java first, then Fabric API, ModMenu, AutoConfig, ClothConfig
+* **Imports:** Standard Java first, then Fabric API, ModMenu, owo-lib
 * **Error Handling:** try-catch blocks with SLF4J `LOGGER.error()` for exceptions
 * **Comments:** Javadoc for public APIs, inline comments for complex logic only
 * **Types:** Use primitives where possible, generics for collections, avoid raw types

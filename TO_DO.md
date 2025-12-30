@@ -1,7 +1,11 @@
 # Tasks or Errors to be taken care of
 
-- The minecraft fabric mod in this project is meant to allow players to hold an item in their hand and press a hotkey to Forbid it being placed in the world. This forbiddance should be persisted across starting and stopping the game until the point it is removed by the user. Currently there are two major issues that I see. They are as follows.
+- The minecraft fabric mod in this project is meant to allow players to hold an item in their hand and press a hotkey to Forbid it being placed in the world. This forbiddance should be persisted across starting and stopping the game until the point it is removed by the user. 
   
-  - 1. The Save file for the forbidden items is saved per world or per server, the way that servers are set up sometimes one server may have a base address with multiple different ports that players can log in through. This causes the mod to not recognize the items that have been forbidden on that server. If you forbid the items across all of the ports then you get the desired effect, but I would rather the save files be based off of the base minecraft server domain, and local worlds to be based on the world name. 
-    
-    2. The save file in another way is causeing issues. As when I check the save files, they are massive. When we save the information for the item in hand, really the only thing that is needed to be saved is the type of item, the lore if there is any, the name default and special if named from an anvil, and any uniqe identifying information. For instance, if I have a pumpkin named frank, all we really need to save is pumpkin and named frank. So that any pumpkin named frank is forbidden from being placed. We dont need all of the exxcess information that is currently being saved. I am going to place a copy of one of the save files in the root called SAVE_FILE.json The file is much too large for you to view the whole thing so please only view a small bit as it is mostly jibberish.
+  - ~~Currently we use Cloth-Config as a depend. It unfortunately is slow to update so I would like to use a newer one. The creator of cloth recommended the owo-lib which another mod I use already needs. Is there any way we could replace the cloth config depend to owo?~~
+  
+  - **DONE:** Successfully migrated from Cloth-Config to owo-lib.
+
+  - If we can switch to owo, please design an implementation that will allow us to implement owo and remove clothconfig from the project. 
+  
+  - If owo will not work, can we use another library? 

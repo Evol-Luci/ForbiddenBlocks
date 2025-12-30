@@ -11,6 +11,15 @@
 
 -----------------------
 
+### **🔥 What's New in v1.5.0**
+*   **Minecraft 1.21.11 Support:** Fully compatible with the latest version!
+*   **Version Bump:** Officially updated to v1.5.0.
+*   **Stability:** Ensured smooth performance with latest Fabric API.
+
+-----------------------
+
+-----------------------
+
 ForbiddenBlocks is a client-side Minecraft mod that prevents players from placing specific blocks and named items, ensuring you never accidentally lose custom names or lore associations!
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,11 +101,10 @@ _🔑 Keys & Quest Items 🗝️_
 ### **📦 Dependencies**
 
 ------------------------------
-🔹 _Fabric Loader_ – >= 0.16.10
-🔹 _Minecraft_ – ~1.21.6
+🔹 _Fabric Loader_ – >= 0.17.2
+🔹 _Minecraft_ – ~1.21.11
 🔹 _Java_ – >= 21 ☕
 🔹 _Fabric API_ – Required for core functionality.
-🔹 _Cloth Config_ – Handles configuration management.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
